@@ -1,0 +1,14 @@
+torch
+torchvision
+pandas
+requests
+sklearn
+tensorboardX
+tensorboard
+tensorflow
+scikit-image
+autopep8
+wandb
+matplotlib
+scikit-learn
+fire
