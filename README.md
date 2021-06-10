@@ -32,35 +32,58 @@ We calculate several fairness metrics that are established in the fairness liter
 
 ## Setup
 ```bash
-$ python3 -m venv fair_benchmark
-$ source fair_benchmark/bin/activate
-$ pip install -r requirements.txt
-$ export PYTHONPATH=`pwd`$PYTHONPATH
-
+python3 -m venv fair_benchmark
+source fair_benchmark/bin/activate
+pip install -r requirements.txt
+export PYTHONPATH=`pwd`$PYTHONPATH
 ```
+
+### Reproducing paper experiments
 
 Make sure that the adult and mnist datasets are in the ./data/ folder
 
 ```bash
-$ python dataloaders/mnist_loader.py --data_dir ./data
+python dataloaders/mnist_loader.py --data_dir ./data
 ```
 
 Once installed you can run (CI-MNIST):
 ```bash
-$ python scripts/coloredmnist/cfair_multiple_launcher.py
+python scripts/coloredmnist/cfair_multiple_launcher.py
 ```
 
 Once installed you can run (ADULT):
 ```bash
-$ python scripts/adult/cfair_multiple_launcher.py
+python scripts/adult/cfair_multiple_launcher.py
 ```
-
 
 As well as all the other scripts under scripts/adult or scripts/coloredmnist in order to complete the sweep of experiments that were completed for the results in the paper
 
+For reproducing results in Setting 1, 2 of CI-MNIST, run the files like above from scripts/coloredmnist/table12/ folder, for Setting 3, 4 for CI-MNIST, run the files in scripts/coloredmnist/table34/ folder. For Setting 1, 2 of Adult dataset run files in scripts/adult folder.
+
 NOTE: Please remember to change the output directory argument (odir) from /scratch/charanr/fairness-project/
 
-<!--$ python train/execute.py --arch "mlp/conv/laftr-dp/laftr-eqodd/laftr-eqopp0/laftr-eqopp1/ffvae/cfair/cfair-eo" --ifwandb-->
+### Generating plots and tables
+First parse the csvs generated from wandb
+
+Then parse the csvs, adds processed csvs to processed_csvs/ folder
+```
+python plots_tables/csvs/parse_csv.py
+```
+
+To create plots in paper, run files in plots_tables, example
+```
+python plots_tables/plots/barplots_adult.py
+python plots_tables/plots/barplots_mnist.py
+python plots_tables/plots/heatmap_std_adult.py
+python plots_tables/plots/heatmap_std_mnist.py
+python plots_tables/plots/heatmap_corr.py
+```
+
+To generate tables in the paper, run
+```
+python plots_tables/tables/get_tables.py
+```
+
 
 ## Giving Credit
 
@@ -71,11 +94,11 @@ Adult: The Adult dataset was originally extracted by Barry Becker from the 1994 
 
 ### Model Credits
 
-LAFTR: Model code is a PyTorch adapted version of [tensorflow LAFTR repository][laftrcode] 
+LAFTR [5]: Model code is a PyTorch adapted version of [tensorflow LAFTR repository][laftrcode] 
 
-CFAIR: Model code is taken from [CFAIR repository][cfaircode]
+CFAIR [6]: Model code is taken from [CFAIR repository][cfaircode]
 
-We would like to especially thank [Elliot Creager][elliot] for helping us in building LAFTR, FFVAE models
+We would like to especially thank [Elliot Creager][elliot] for helping us in building LAFTR [5], FFVAE [7] models
 
 ### Metric Credits
 
