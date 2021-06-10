@@ -12,3 +12,4 @@ wandb
 matplotlib
 scikit-learn
 fire
+python-git
