@@ -28,7 +28,7 @@ python train/execute.py --arch "mlp/conv/laftr-dp/laftr-eqodd/laftr-eqopp0/laftr
 ## How do we measure fairness?
 We calculate several fairness metrics that are established in the fairness literature and have all been listed [here][metrics], but due to time and space constraints we restrict ourselves to the ones listed below. Note that there is neither a universal fairness metric nor a universally accepted definition of fairness.
 
-![Schematic figure](media/metrics.png)
+![Schematic figure](utils/media/metrics.png)
 
 ## Setup
 ```bash
@@ -152,8 +152,8 @@ If you cite this work, you may also want to cite:
 
 
 ## Results
-![Adult plots](media/results_adult.PNG)
-![Mnist plots](media/results_mnist.PNG)
+![Adult plots](utils/media/results_adult.PNG)
+![Mnist plots](utils/media/results_mnist.PNG)
 
 
 
