@@ -42,28 +42,42 @@ export PYTHONPATH=`pwd`$PYTHONPATH
 
 Make sure that the adult and mnist datasets are in the ./data/ folder
 
+For CI-MNIST dataset:
 ```bash
 python dataloaders/mnist_loader.py --data_dir ./data
 ```
 
-Once installed you can run (CI-MNIST):
+For Adult dataset:
+Upload data files from the [Adult website][adult] to ./data/ folder
+
+Once downloaded you can run CI-MNIST experiments like:
 ```bash
-python scripts/coloredmnist/cfair_multiple_launcher.py
+python scripts/coloredmnist/setting12/cfair_multiple_launcher.py
 ```
 
-Once installed you can run (ADULT):
+Once installed you can run ADULT experiments like:
 ```bash
-python scripts/adult/cfair_multiple_launcher.py
+python scripts/adult/setting12/cfair_multiple_launcher.py
 ```
 
 As well as all the other scripts under scripts/adult or scripts/coloredmnist in order to complete the sweep of experiments that were completed for the results in the paper
 
-For reproducing results in Setting 1, 2 of CI-MNIST, run the files like above from scripts/coloredmnist/table12/ folder, for Setting 3, 4 for CI-MNIST, run the files in scripts/coloredmnist/table34/ folder. For Setting 1, 2 of Adult dataset run files in scripts/adult folder.
+For reproducing results in Setting 1, 2 of CI-MNIST:
+Run the files in scripts/coloredmnist/setting12/ folder.
+
+For reproducing results in Setting 3, 4 of CI-MNIST: 
+Run the files in scripts/coloredmnist/setting34/ folder. 
+
+For reproducing results in Setting 1, 2 of Adult:
+Run the files in scripts/adult/setting12/ folder.
+
+For reproducing ablation experiments in Tables 54 to 59 in the paper:
+Run the files in scripts/ablations folder.
 
 NOTE: Please remember to change the output directory argument (odir) from /scratch/charanr/fairness-project/
 
 ### Generating plots and tables
-First parse the csvs generated from wandb
+Initially generate the csvs of the experiments ran from wandb
 
 Then parse the csvs, adds processed csvs to processed_csvs/ folder
 ```
@@ -83,7 +97,6 @@ To generate tables in the paper, run
 ```
 python plots_tables/tables/get_tables.py
 ```
-
 
 ## Giving Credit
 

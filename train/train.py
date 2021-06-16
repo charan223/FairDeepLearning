@@ -8,6 +8,7 @@ import random
 import numpy as np
 import wandb
 import json
+from itertools import tee
 
 import torch
 import torch.nn as nn
@@ -37,51 +38,56 @@ def train(
         )
 
     torch.autograd.set_detect_anomaly(True)
-    for batch_idx, (xs, ys, attrs, _) in enumerate(train_loader):
 
-        if not args.model_name == "conv" and not args.model_name == "ffvae":
-            xs = xs.reshape(len(xs), -1)
+    num=args.d_coeff
+    train_loader, new_train_loader = tee(train_loader)
+    for _ in range(int(num)):
+        new_train_loader, train_loader = tee(new_train_loader)
+        for batch_idx, (xs, ys, attrs, _) in enumerate(train_loader):
 
-        xs, ys, attrs = (
-            torch.from_numpy(xs).to(device),
-            torch.from_numpy(ys).to(device),
-            torch.from_numpy(attrs).to(device),
-        )
-        ys, attrs = (
-            ys.type(torch.LongTensor).to(device),
-            attrs.type(torch.LongTensor).to(device),
-        )
+            if not args.model_name == "conv" and not args.model_name == "ffvae":
+                xs = xs.reshape(len(xs), -1)
 
-        if args.model_name == "cfair":
-            pre_softmax, cost_dict = model(
-                xs, ys, attrs, "train", reweight_target_tensor, reweight_attr_tensors
+            xs, ys, attrs = (
+                torch.from_numpy(xs).to(device),
+                torch.from_numpy(ys).to(device),
+                torch.from_numpy(attrs).to(device),
             )
-        elif args.model_name == "laftr":
-            pre_softmax, cost_dict = model(
-                xs, ys, attrs, "train", A_weights, Y_weights, AY_weights
+            ys, attrs = (
+                ys.type(torch.LongTensor).to(device),
+                attrs.type(torch.LongTensor).to(device),
             )
-        else:
-            pre_softmax, cost_dict = model(xs, ys, attrs, "train")
 
-        # get the index of the max log-probability
-        if args.model_name != "laftr":
-            pred = pre_softmax.argmax(dim=1, keepdim=True)
-        else:
-            pred = pre_softmax > 0.5
+            if args.model_name == "cfair":
+                pre_softmax, cost_dict = model(
+                    xs, ys, attrs, "train", reweight_target_tensor, reweight_attr_tensors
+                )
+            elif args.model_name == "laftr":
+                pre_softmax, cost_dict = model(
+                    xs, ys, attrs, "train", A_weights, Y_weights, AY_weights
+                )
+            else:
+                pre_softmax, cost_dict = model(xs, ys, attrs, "train")
 
-        acc = pred.eq(ys.view_as(pred)).sum().item() / xs.size(0)
+            # get the index of the max log-probability
+            if args.model_name != "laftr":
+                pred = pre_softmax.argmax(dim=1, keepdim=True)
+            else:
+                pred = pre_softmax > 0.5
 
-        stats = dict((n, c.item()) for (n, c) in cost_dict.items())
-        stats["acc"] = acc
-        average_meters.update_dict(stats)
+            acc = pred.eq(ys.view_as(pred)).sum().item() / xs.size(0)
 
-        args.global_step += 1
+            stats = dict((n, c.item()) for (n, c) in cost_dict.items())
+            stats["acc"] = acc
+            average_meters.update_dict(stats)
 
-        if batch_idx % args.log_interval == 0:
-            averages = average_meters.averages()
-            print(epoch, batch_idx, averages)
-            if train_log:
-                train_log.record(args.global_step, averages)
+            args.global_step += 1
+
+            if batch_idx % args.log_interval == 0:
+                averages = average_meters.averages()
+                print(epoch, batch_idx, averages)
+                if train_log:
+                    train_log.record(args.global_step, averages)
 
     print(
         "Epoch ", epoch, " ended. %.1fm/ep" % (float(time.time() - start_epoch) / 60.0)
