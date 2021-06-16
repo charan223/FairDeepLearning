@@ -38,7 +38,7 @@ pip install -r requirements.txt
 export PYTHONPATH=`pwd`$PYTHONPATH
 ```
 
-### Reproducing paper experiments
+## Reproducing paper experiments
 
 Make sure that the adult and mnist datasets are in the ./data/ folder
 
@@ -63,16 +63,24 @@ python scripts/adult/setting12/cfair_multiple_launcher.py
 As well as all the other scripts under scripts/adult or scripts/coloredmnist in order to complete the sweep of experiments that were completed for the results in the paper
 
 For reproducing results in Setting 1, 2 of CI-MNIST:
+```
 Run the files in scripts/coloredmnist/setting12/ folder.
+```
 
-For reproducing results in Setting 3, 4 of CI-MNIST: 
+For reproducing results in Setting 3, 4 of CI-MNIST:
+```
 Run the files in scripts/coloredmnist/setting34/ folder. 
+```
 
 For reproducing results in Setting 1, 2 of Adult:
+```
 Run the files in scripts/adult/setting12/ folder.
+```
 
 For reproducing ablation experiments in Tables 54 to 59 in the paper:
+```
 Run the files in scripts/ablations folder.
+```
 
 NOTE: Please remember to change the output directory argument (odir) from /scratch/charanr/fairness-project/
 
