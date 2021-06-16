@@ -1,3 +1,7 @@
+"""
+For reproducing Setting 3, 4 experiments with Laftr model on CI-MNIST dataset
+"""
+
 import pandas as pd
 import numpy as np
 import itertools
@@ -8,39 +12,19 @@ import os
 import hashlib
 
 
-seeds = [3]
-
+seeds = [3, 4, 5]
 clr_ratios = [(0.5, 0.5)]
-# clr_ratios = [(0.1, 0.1), (0.01, 0.01), (0.001, 0.001), (0.1, 0.9), (0.01, 0.99), (0.5, 0.5)]
-
 green_yellows = [True]
-
-# g_y_ratio = [(0.5, 0.5)]
 g_y_ratio = [(0.5, 0.5), (0.75, 0.25), (0.9, 0.1)]
+sensitiveattrs = ['bck', 'color_gy']
 
-sensitiveattrs = ['color_gy']
-measure_sensitiveattrs = ['color_gy']
-# sensitiveattrs = ['bck', 'color_gy']
-# sensitiveattrs = ['green_1', 'bck', 'color_gy']
+archs = ['laftr-dp', 'laftr-eqopp0', 'laftr-eqopp1', 'laftr-eqodd']
 
-fair_coeffs = [1.0]
-# fair_coeffs = [0.1, 0.5, 1.0, 2.0, 4.0]
-
+fair_coeffs = [0.1, 0.5, 1.0, 2.0, 4.0]
 adv_coeffs = [1.0]
-# adv_coeffs = [0.1, 1.0, 10.0, 100.0, 1000.0]
 
-# gammas = [0.1]
-# alphas = [10]
-gammas = [10, 50, 100]
-alphas = [10, 100, 1000]
-
-archs = ['ffvae']
-
-
-
-d_coeffs = [0.1]
-which_classes = [0]
-# which_classes = [0, 1]
+gammas = [0.1]
+alphas = [10]
 
 widths = [32]
 isshades = [True]
@@ -52,6 +36,10 @@ adepths = [2]
 awidths = [32]
 zdims = [16]
 
+# not used
+measure_sensitiveattrs = ['color_gy']
+d_coeffs = [1]
+which_classes = [0]
 green_1s = [0]
 green_widths = [0]
 green_2s = [False]
@@ -68,36 +56,9 @@ all_experiments = list(itertools.product(digit_patterns, clr_ratios, isshades,
                                          d_coeffs, which_classes,
                                          green_yellows, g_y_ratio, measure_sensitiveattrs))
 
-'''
-df = pd.read_csv(r'all_exp.csv')
-
-done_experiments = []
-for i, row in enumerate(df.iterrows()):
-    clr_ratios = list(map(float, row[1]['clr_ratio'].replace("(", "").replace(")", "").split(',')))
-    clr_ratio = (clr_ratios[0], clr_ratios[1])
-    #e_o_ratios = list(map(float, row[1]['e_o_ratio'].replace("(", "").replace(")", "").split(',')))
-    #e_o_ratio = (e_o_ratios[0], e_o_ratios[1])
-    g_y_ratios = list(map(float, row[1]['g_y_ratio'].replace("(", "").replace(")", "").split(',')))
-    g_y_ratio = (g_y_ratios[0], g_y_ratios[1])
-    done_experiments.append((row[1]['digit_pattern'], clr_ratio, row[1]['useshade'],
-      row[1]['green_1'], row[1]['green_2'], row[1]['gw'], e_o_ratio[0],  row[1]['batchnorm'],
-      row[1]['cwidths'], row[1]['sensattr'], row[1]['edepth'], row[1]['ewidths'], row[1]['adepth'],
-      row[1]['awidths'], row[1]['zdim'], row[1]['seed'], row[1]['arch'], row[1]['fair_coeff'], row[1]['aud_steps'],
-      row[1]['adv_coeff'], row[1]['gamma'], row[1]['alpha'], row[1]['d_coeff'], row[1]['which_class'],
-      row[1]['green_yellow'], g_y_ratio, row[1]['measure_sensattr']))
-
-tbd_experiments = [x for x in all_experiments if x not in done_experiments]
-print(len(all_experiments), len(tbd_experiments))
-
-
-print(f"Total number of jobs = {len(tbd_experiments)}")
-for idx, exp in enumerate(tbd_experiments):
-'''
-
 
 print(f"Total number of jobs = {len(all_experiments)}")
 for idx, exp in enumerate(all_experiments):
-    # exp_id = f"mila-laftr-arch_{exp[17]}_seed_{exp[16]}_b1_{exp[1][0]}_b2_{exp[1][1]}_g1_{exp[3]}_g2_{exp[4]}_width_{exp[]}"
 
     MAIN_CMD = f"./scripts/slurm_launcher.sh --wd {exp[8]}"\
                f" --bck blue-red"\
