@@ -71,7 +71,7 @@ for idx, exp in enumerate(all_experiments):
                f" --ewd {exp[8]}"\
                f" --adpt {exp[9]}"\
                f" --awd {exp[10]}"\
-               f" --cdpt{exp[11]}"\
+               f" --cdpt {exp[11]}"\
                f" --cwd {exp[12]}"\
                f" --zdim {exp[13]}"\
                f" --seed {exp[14]}"\
