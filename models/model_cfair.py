@@ -84,15 +84,7 @@ class CFairNet(nn.Module):
             optim = torch.optim.Adam(self.all_params())
         return optim
 
-    def forward(
-        self,
-        inputs,
-        labels,
-        attrs,
-        mode="train",
-        reweight_target_tensor=None,
-        reweight_attr_tensors=None,
-    ):
+    def forward(self, inputs, labels, attrs, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder ,
             Computes backward pass on the target function"""
         h_relu = inputs

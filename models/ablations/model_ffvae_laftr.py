@@ -125,11 +125,11 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("ffvae_cfair")
-class Ffvae(nn.Module):
+@register_model("ffvae_laftr")
+class Ffvae_laftr(nn.Module):
     """Initializes FFVAE network: VAE encoder, MLP classifier, MLP discriminator"""
     def __init__(self, args):
-        super(Ffvae, self).__init__()
+        super(Ffvae_laftr, self).__init__()
         self.input_dim = args.input_dim
         self.num_classes = args.num_classes
         self.gamma = args.gamma
@@ -186,7 +186,7 @@ class Ffvae(nn.Module):
     @staticmethod
     def build_model(args):
         """ Builds FFVAE class """
-        model = Ffvae(args)
+        model = Ffvae_laftr(args)
         return model
 
     def vae_params(self):

@@ -101,7 +101,7 @@ class MLPNet(nn.Module):
         """Returns optimizer over all parameters of MLP"""
         return torch.optim.Adam(self.all_params())
 
-    def forward(self, inputs, labels, attrs, mode="train"):
+    def forward(self, inputs, labels, attrs, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder and classifier,
             Computes backward pass on the target function"""
         h_relu = inputs

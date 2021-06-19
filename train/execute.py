@@ -187,8 +187,10 @@ def get_args(wandb):
     if not args.name:
         args.name = "%s" % ("".join(time.ctime().split()))
 
-    if args.arch[0:5] == "laftr" or args.arch[0:5] == "cfair":
-        args.model_name = args.arch[0:5]
+    if "laftr" in args.arch:
+        args.model_name = "laftr"
+    elif "cfair" in args.arch:
+        args.model_name = "cfair"
     else:
         args.model_name = args.arch
 
@@ -205,18 +207,18 @@ def get_args(wandb):
     if args.data == "adult":
         args.input_dim = 112
         args.measure_sensattr = args.sensattr
-        if args.model_name == "laftr":
+        if "laftr" in args.model_name:
             args.zdim = 8
             args.aud_steps = 1
             args.adepth, args.edepth, args.cdepth = 0, 0, 0
             args.awidths, args.ewidths, args.cwidths = 0, 0, 0
             args.batch_size = 64
-        elif args.model_name == "cfair":
+        elif "cfair" in args.model_name:
             args.zdim = 60
             args.adepth, args.edepth, args.cdepth = 1, 0, 0
             args.awidths, args.ewidths, args.cwidths = 50, 0, 0
             args.batch_size = 64
-        elif args.model_name == "ffvae":
+        elif "ffvae" in args.model_name:
             args.zdim = 60
             args.adepth, args.edepth, args.cdepth = 1, 1, 1
             args.awidths, args.ewidths, args.cwidths = 200, 200, 200
@@ -291,7 +293,6 @@ def save_early_stopping_logs(
 
 def get_model(args):
     model = ModelFactory.build_model(args.model_name, args).to(args.device)
-
     return model
 
 
@@ -420,7 +421,7 @@ if __name__ == "__main__":
 
     print("\nTRAINING:\n")
     time_start = time.time()
-    if args.model_name == "ffvae":
+    if "ffvae" in args.model_name:
         train_vae(args, model, early_stopping_vae, dataset, train_log, test_log)
 
     train_model(

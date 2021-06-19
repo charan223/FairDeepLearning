@@ -113,7 +113,7 @@ class LaftrNet(nn.Module):
 
         return wtd_L
 
-    def forward(self, X, Y, A, mode="train", A_wts=None, Y_wts=None, AY_wts=None):
+    def forward(self, X, Y, A, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder ,
             Computes backward pass on the target function"""
         Z = self.encoder(X)
