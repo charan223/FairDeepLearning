@@ -43,7 +43,7 @@ def train(
     train_loader, new_train_loader = tee(train_loader)
     for _ in range(int(num)):
         new_train_loader, train_loader = tee(new_train_loader)
-        for batch_idx, (xs, ys, attrs, _) in enumerate(train_loader):
+        for batch_idx, (xs, ys, attrs) in enumerate(train_loader):
 
             if not args.model_name == "conv" and not args.model_name == "ffvae":
                 xs = xs.reshape(len(xs), -1)
@@ -224,7 +224,7 @@ def train_ffvae(
 
     torch.autograd.set_detect_anomaly(True)
 
-    for batch_idx, (xs, ys, attrs, _) in enumerate(train_loader):
+    for batch_idx, (xs, ys, attrs) in enumerate(train_loader):
         xs, ys, attrs = (
             torch.from_numpy(xs).to(device),
             torch.from_numpy(ys).to(device),
@@ -266,7 +266,7 @@ def test_ffvae(
     zeros = torch.zeros(args.batch_size, dtype=torch.long, device=device)
 
     with torch.no_grad():
-        for batch_idx, (xs, ys, attrs, _) in enumerate(test_loader):
+        for batch_idx, (xs, ys, attrs) in enumerate(test_loader):
             xs, ys, attrs = (
                 torch.from_numpy(xs).to(device),
                 torch.from_numpy(ys).to(device),
