@@ -39,7 +39,7 @@ def train(
 
     torch.autograd.set_detect_anomaly(True)
 
-    num=args.d_coeff
+    num=args.replicate
     train_loader, new_train_loader = tee(train_loader)
     for _ in range(int(num)):
         new_train_loader, train_loader = tee(new_train_loader)
