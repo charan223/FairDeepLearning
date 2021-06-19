@@ -17,7 +17,7 @@ class Dataset:
         self.privileged_vals = {
             "sensitiveattr": 0
         }  # e.g. in Ricci dataset, Race is 'W' is considered priviledged
-        self.sensitive_dict = {"sensitiveattr": list(range(args.n_attr))}
+        self.sensitive_dict = {"sensitiveattr": list(range(args.num_groups))}
         self.read_data()
         self.AY_proportion = None
 
