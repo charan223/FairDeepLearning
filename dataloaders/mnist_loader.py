@@ -29,17 +29,14 @@ class MNISTthin:
         green_yellow=True,
         egr=0.5,
         ogr=0.5,
-        green_1=0,
-        green_2=False,
-        green_width=0,
-        digit_pattern=0,
-        e_pat_ratio=0,
-        o_pat_ratio=0,
         sensitiveattr="bck",
-        measure_sensitiveattr="bck",
         transform_list=[],
         out_channels=3,
     ):
+
+        # downloads data if not present
+        # download_data(path)
+
         if which_set in ["train", "val"]:
             self.images = np.load(os.path.join(path, "train-images.npy"))
             self.labels = np.load(os.path.join(path, "train-labels.npy"))
@@ -57,11 +54,12 @@ class MNISTthin:
             self.images = self.images[ntrain:]
             self.labels = self.labels[ntrain:]
         pad_images = np.zeros(
-            (self.images.shape[0], self.images.shape[1] + 4, self.images.shape[2] + 4),
+            (self.images.shape[0], self.images.shape[1] +
+             4, self.images.shape[2] + 4),
             dtype=self.images.dtype,
         )
         pad_images[
-            :, 4 : 4 + self.images.shape[1], 4 : 4 + self.images.shape[1]
+            :, 4: 4 + self.images.shape[1], 4: 4 + self.images.shape[1]
         ] = self.images
         # pad_images[:, 2: 2 + self.images.shape[1],
         #            2: 2 + self.images.shape[1]] = self.images
@@ -73,15 +71,13 @@ class MNISTthin:
         self.transform = None
         self.n_classes = 2
         self.out_channels = out_channels
-        assert sensitiveattr in ["green_1", "bck", "color_gy"]
+        assert sensitiveattr in ["bck", "color_gy"]
         self.sensitiveattr = sensitiveattr
-
-        assert measure_sensitiveattr in ["green_1", "bck", "color_gy"]
-        self.measure_sensitiveattr = measure_sensitiveattr
 
         # adding channels
         if out_channels > 1:
-            self.images = np.tile(self.images[:, :, :, np.newaxis], out_channels)
+            self.images = np.tile(
+                self.images[:, :, :, np.newaxis], out_channels)
         # self.img, self.att, lbl = self.load_colored_mnist(bck=background, label=label_type, clr_ratio=clr_ratio)
         self.img, self.att, lbl = self.load_multivariable_mnist(
             bck=background,
@@ -91,12 +87,6 @@ class MNISTthin:
             green_yellow=green_yellow,
             egr=egr,
             ogr=ogr,
-            green_1=green_1,
-            green_2=green_2,
-            green_width=green_width,
-            digit_pattern=digit_pattern,
-            e_pat_ratio=e_pat_ratio,
-            o_pat_ratio=o_pat_ratio,
         )
         self.measure_att = self.att[self.measure_sensitiveattr]
         self.att = self.att[self.sensitiveattr]
@@ -114,13 +104,7 @@ class MNISTthin:
         clr_ratio=[],
         green_yellow=True,
         egr=0.5,
-        ogr=0.5,
-        green_1=0,
-        green_2=False,
-        green_width=0,
-        digit_pattern=0,
-        e_pat_ratio=0,
-        o_pat_ratio=0,
+        ogr=0.5
     ):
         """This module returns
         MNIST digits with
@@ -130,8 +114,6 @@ class MNISTthin:
         even-odd   :::  1=even or 0=odd.
         cat-digits ::: categorical labels
         clr_ratio[0] (clr_ratio[1]) refers to the ratio of blue in even (odd) digits
-        e_pat_ratio is a real number in [0,1] :::ratio of patternd for evens
-        o_pat_ratio is a real number in [0,1] :::ratio of patternd for odds
         """
         assert bck in ["blue-red", "black"]
 
@@ -155,7 +137,8 @@ class MNISTthin:
             num_imgs_o = mask[even_odd_label == 0].shape[0]
             num_imgs_e = mask[even_odd_label == 1].shape[0]
             be_ratio = int(clr_ratio[0] * even_odd_label.sum())
-            bo_ratio = int(clr_ratio[1] * (mask.shape[0] - even_odd_label.sum()))
+            bo_ratio = int(
+                clr_ratio[1] * (mask.shape[0] - even_odd_label.sum()))
 
             if shade:
                 be = np.zeros((be_ratio, 32, 32, 3), dtype=dtype)
@@ -188,37 +171,32 @@ class MNISTthin:
             else:
                 be = np.zeros((be_ratio, 32, 32, 3), dtype=dtype)
                 re = np.zeros((num_imgs_e - be_ratio, 32, 32, 3), dtype=dtype)
-                be[:, :, :, 2:3] = 255 * np.ones((be_ratio, 32, 32, 1), dtype=dtype)
+                be[:, :, :, 2:3] = 255 * \
+                    np.ones((be_ratio, 32, 32, 1), dtype=dtype)
                 re[:, :, :, 0:1] = 255 * np.ones(
                     (num_imgs_e - be_ratio, 32, 32, 1), dtype=dtype
                 )
 
-            be = c * (
-                be
-                * (
-                    1
-                    - (self.images[even_odd_label == 1] > 0.5).astype(dtype)[:be_ratio]
-                )
-            )
+            be = c * (be * (1 - (self.images[even_odd_label == 1]
+                                 > 0.5).astype(dtype)[:be_ratio]))
 
-            x = 1 - (self.images[even_odd_label == 1] <= 0.5).astype(dtype)[:be_ratio]
+            x = 1 - (self.images[even_odd_label == 1]
+                     <= 0.5).astype(dtype)[:be_ratio]
             if shade:
-                y = np.random.uniform(0.90, 1.0, size=x.shape) * np.ones(x.shape)
+                y = np.random.uniform(
+                    0.90, 1.0, size=x.shape) * np.ones(x.shape)
             else:
                 y = 1.0
             be = be + (255.0 * x * y)
 
             assert be.shape == (be_ratio, *image.shape[1:])
-            re = c * (
-                re
-                * (
-                    1
-                    - (self.images[even_odd_label == 1] > 0.5).astype(dtype)[be_ratio:]
-                )
-            )
-            x = 1 - (self.images[even_odd_label == 1] <= 0.5).astype(dtype)[be_ratio:]
+            re = c * (re* (1- (self.images[even_odd_label == 1]
+                       > 0.5).astype(dtype)[be_ratio:]))
+            x = 1 - (self.images[even_odd_label == 1]
+                     <= 0.5).astype(dtype)[be_ratio:]
             if shade:
-                y = np.random.uniform(0.90, 1.0, size=x.shape) * np.ones(x.shape)
+                y = np.random.uniform(
+                    0.90, 1.0, size=x.shape) * np.ones(x.shape)
             else:
                 y = 1.0
             re = re + (255.0 * x * y)
@@ -254,143 +232,36 @@ class MNISTthin:
             else:
                 bo = np.zeros((bo_ratio, 32, 32, 3), dtype=dtype)
                 ro = np.zeros((num_imgs_o - bo_ratio, 32, 32, 3), dtype=dtype)
-                bo[:, :, :, 2:3] = 255 * np.ones((bo_ratio, 32, 32, 1), dtype=dtype)
+                bo[:, :, :, 2:3] = 255 * \
+                    np.ones((bo_ratio, 32, 32, 1), dtype=dtype)
                 ro[:, :, :, 0:1] = 255 * np.ones(
                     (num_imgs_o - bo_ratio, 32, 32, 1), dtype=dtype
                 )
-            bo = c * (
-                bo
-                * (
-                    1
-                    - (self.images[even_odd_label == 0] > 0.5).astype(dtype)[:bo_ratio]
-                )
-            )
-            x = 1 - (self.images[even_odd_label == 0] <= 0.5).astype(dtype)[:bo_ratio]
+            bo = c * (bo * (1 - (self.images[even_odd_label == 0]
+                       > 0.5).astype(dtype)[:bo_ratio]))
+            x = 1 - (self.images[even_odd_label == 0]
+                     <= 0.5).astype(dtype)[:bo_ratio]
             if shade:
-                y = np.random.uniform(0.90, 1.0, size=x.shape) * np.ones(x.shape)
+                y = np.random.uniform(
+                    0.90, 1.0, size=x.shape) * np.ones(x.shape)
             else:
                 y = 1.0
 
             bo = bo + (255.0 * x * y)
             assert bo.shape == (bo_ratio, *image.shape[1:])
-            ro = c * (
-                ro
-                * (
-                    1
-                    - (self.images[even_odd_label == 0] > 0.5).astype(dtype)[bo_ratio:]
-                )
-            )
-            x = 1 - (self.images[even_odd_label == 0] <= 0.5).astype(dtype)[bo_ratio:]
+            ro = c * (ro * (1 - (self.images[even_odd_label == 0]
+                       > 0.5).astype(dtype)[bo_ratio:]))
+            x = 1 - (self.images[even_odd_label == 0]
+                     <= 0.5).astype(dtype)[bo_ratio:]
             if shade:
-                y = np.random.uniform(0.90, 1.0, size=x.shape) * np.ones(x.shape)
+                y = np.random.uniform(
+                    0.90, 1.0, size=x.shape) * np.ones(x.shape)
             else:
                 y = 1.0
 
             ro = ro + (255.0 * x * y)
             image[even_odd_label == 1] += np.concatenate([be, re], axis=0)
             image[even_odd_label == 0] += np.concatenate([bo, ro], axis=0)
-            # shuffle before adding greens pixels
-            image = image[shffl_1st]
-            mask = mask[shffl_1st]
-            label = label[shffl_1st]
-            even_odd_label = (label % 2 == 0).astype(np.uint8)
-            np.random.shuffle(shffl_1st)
-
-            # adding green_1 pixels
-            if green_1:
-                assert 0 < green_1 < image.shape[1] - 9
-                green_starting_pixel_e = np.random.randint(
-                    low=0, high=green_1 / 2, size=(num_imgs_e)
-                )
-                green_starting_pixel_o = np.random.randint(
-                    low=green_1 / 2, high=green_1, size=(num_imgs_o)
-                )
-                green_starting_pixel = np.zeros((image.shape[0])).astype("uint8")
-                green_starting_pixel[even_odd_label == 1] = green_starting_pixel_e
-                green_starting_pixel[even_odd_label == 0] = green_starting_pixel_o
-                assert green_width > 0
-                image[
-                    np.arange(image.shape[0]), 0:green_width, green_starting_pixel, 0
-                ] = 0.0
-                image[
-                    np.arange(image.shape[0]), 0:green_width, green_starting_pixel, 1
-                ] = 255.0
-                image[
-                    np.arange(image.shape[0]), 0:green_width, green_starting_pixel, 2
-                ] = 0.0
-            if green_1:
-                green_starting_pixel = (green_starting_pixel < green_1 / 2).astype(
-                    np.uint8
-                )
-                green_1_ = green_starting_pixel
-
-            if green_2:
-                assert green_width > 0
-                image[
-                    np.arange(image.shape[0]),
-                    0:green_width,
-                    label + green_starting_pixel + 1,
-                    0,
-                ] = 0.0
-                image[
-                    np.arange(image.shape[0]),
-                    0:green_width,
-                    label + green_starting_pixel + 1,
-                    1,
-                ] = 255.0
-                image[
-                    np.arange(image.shape[0]),
-                    0:green_width,
-                    label + green_starting_pixel + 1,
-                    2,
-                ] = 0.0
-            # Adding patterns
-            image = image[shffl_1st]
-            mask = mask[shffl_1st]
-            label = label[shffl_1st]
-            if green_1:
-                green_1_ = green_starting_pixel[shffl_1st]
-            even_odd_label = (label % 2 == 0).astype(np.uint8)
-            np.random.shuffle(shffl_1st)
-
-            if digit_pattern:
-                assert digit_pattern > 6
-                num_o_gt_5 = int(num_imgs_o * o_pat_ratio)
-                num_e_gt_5 = int(num_imgs_e * e_pat_ratio)
-                num_e_lt_5 = num_imgs_e - num_e_gt_5
-                num_o_lt_5 = num_imgs_o - num_o_gt_5
-                num_lines_gt_e = np.random.randint(
-                    low=6, high=digit_pattern, size=(num_e_gt_5)
-                )
-                num_lines_gt_o = np.random.randint(
-                    low=6, high=digit_pattern, size=(num_o_gt_5)
-                )
-                num_lines_lt_e = np.random.randint(low=2, high=6, size=(num_e_lt_5))
-                num_lines_lt_o = np.random.randint(low=2, high=6, size=(num_o_lt_5))
-                num_e = np.array(list(num_lines_gt_e) + list(num_lines_lt_e)).astype(
-                    "uint8"
-                )
-                num_o = np.array(list(num_lines_gt_o) + list(num_lines_lt_o)).astype(
-                    "uint8"
-                )
-
-                num_lines = np.zeros((image.shape[0])).astype("uint8")
-
-                num_lines[even_odd_label == 1] = num_e
-                num_lines[even_odd_label == 0] = num_o
-                for i in range(image.shape[0]):
-                    row = np.random.randint(low=10, high=30, size=(num_lines[i]))
-
-                    L = (mask[i, row, :, :] > 0.5).astype(dtype) * 0.0 + (
-                        mask[i, row, :, :] < 0.5
-                    ).astype(dtype) * image[i, row, :, :]
-                    image[i, row, :, :] = L
-
-                all_att["patt"] = (num_lines[shffl_1st] > 5).astype(np.uint8)
-
-            if green_1:
-                green_1_ = green_starting_pixel[shffl_1st]
-                all_att["green_1"] = green_1_
 
             image = image[shffl_1st]
             mask = mask[shffl_1st]
@@ -449,8 +320,6 @@ class MNISTthin:
         attribute = image[:, 3, 0, :].copy().argmax(axis=1)
         attribute[attribute == 2] = 1
         all_att["bck"] = attribute
-        if green_2:
-            all_att["green_2"] = (label % 2 == 0).astype(np.uint8)
 
         image_transformed = image.transpose(0, 3, 1, 2).astype("float32")
         print(np.amax(image_transformed), np.amin(image_transformed))
@@ -458,91 +327,3 @@ class MNISTthin:
 
     def normalize(self, img):
         return (img / 255.0) * 2.0 - 1.0  # [-1, +1]
-
-
-def prep_data(
-    data_dir="./data",
-    bck="blue-red",
-    shade=True,
-    label="cat-digits",
-    clr_ratio=[0.5, 0.5],
-    green_yellow=True,
-    egr=0.5,
-    ogr=0.5,
-    green_1=0,
-    green_2=False,
-    green_width=0,
-    digit_pattern=0,
-    e_pat_ratio=0,
-    o_pat_ratio=0,
-    output_dir="./output",
-):
-
-    args = {
-        "data_dir": data_dir,
-        "bck": bck,
-        "shade": shade,
-        "label": label,
-        "clr_ratio": clr_ratio,
-        "green_yellow": green_yellow,
-        "egr": egr,
-        "ogr": ogr,
-        "green_1": green_1,
-        "green_2": green_2,
-        "green_width": green_width,
-        "digit_pattern": digit_pattern,
-        "e_pat_ratio": e_pat_ratio,
-        "o_pat_ratio": o_pat_ratio,
-    }
-
-    with open(f"{output_dir}/dataset_args.json", "w") as outfile:
-        json.dump(args, outfile)
-
-    print("data dir:", data_dir)
-    if not os.path.exists(data_dir):
-        os.mkdir(data_dir)
-
-    # if not exist, download mnist dataset
-    import tensorflow.compat.v1 as tf
-
-    tf.disable_v2_behavior()
-    # Downloads in ~/.keras/datasets/mnist.npz
-    # or run only this function with this dirty hack:
-    # HOME=./data python dataset/mnist_loader.py --data-dir ./data
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(
-        path="mnist.npz"
-    )
-    x_train, x_test = x_train / 255.0, x_test / 255.0
-
-    join_data = lambda *s: os.path.join(data_dir, *s)
-
-    np.save(join_data("train-images.npy"), x_train)
-    np.save(join_data("test-images.npy"), x_test)
-    np.save(join_data("train-labels.npy"), y_train)
-    np.save(join_data("test-labels.npy"), y_test)
-
-    train_data = MNISTthin("train", data_dir)
-    val_data = MNISTthin("val", data_dir)
-    test_data = MNISTthin("test", data_dir)
-    img, att, lbl = train_data.load_multivariable_mnist(
-        bck,
-        shade,
-        label,
-        clr_ratio,
-        green_yellow,
-        egr,
-        ogr,
-        green_1,
-        green_2,
-        green_width,
-        digit_pattern,
-        e_pat_ratio,
-        o_pat_ratio,
-    )
-    example_address = join_data("train_example.jpg")
-    # save_image(img[:64], example_address)
-    # print('Example of train data:', example_address)
-
-
-if __name__ == "__main__":
-    fire.Fire(prep_data)
