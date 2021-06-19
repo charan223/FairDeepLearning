@@ -4,15 +4,12 @@ import sys
 # make noNULL file with: grep -v NULL rawdata_mkmk01.csv | cut -f1,3,4,6- -d, > rawdata_mkmk01_noNULL.csv
 EPS = 1e-8
 
-# RACE_VALS_U = ['Black', 'Asian-Pac-Islander', 'Amer-Indian-Eskimo', 'Other']
 UNPRIVILEGED_ARR = np.array([1, 0])
 PRIVILEGED_ARR = np.array([0, 1])
 SENSATTR_RULES = {
     "sex": lambda x, thresh1, thresh2: UNPRIVILEGED_ARR
     if x == "Female"
     else PRIVILEGED_ARR,
-    # 'race':
-    # lambda x: UNPRIVILEGED_ARR if x in RACE_VALS_U else PRIVILEGED_ARR,
     "age": lambda x, thresh1, thresh2: UNPRIVILEGED_ARR
     if thresh1 <= int(x) < thresh2
     else PRIVILEGED_ARR,
@@ -22,8 +19,6 @@ SENSATTR_RULES = {
 def binarize_sensattr(val, sensattr, thresh1, thresh2):
     return SENSATTR_RULES[sensattr](val, thresh1, thresh2)
 
-
-# LOOK AT THIS FUNCTION!!!! GETTING STD = 0
 def bucket(x, buckets):
     x = float(x)
     n = len(buckets)
@@ -36,7 +31,6 @@ def bucket(x, buckets):
     template[label] = 1.0
     return template
 
-
 def onehot(x, choices):
     if not x in choices:
         print('could not find "{}" in choices'.format(x))
@@ -47,10 +41,8 @@ def onehot(x, choices):
     template[label] = 1.0
     return template
 
-
 def continuous(x):
     return [float(x)]
-
 
 def parse_row(row, headers, headers_use, fns, sensitive, target, thresh1, thresh2):
     new_row_dict = {}
@@ -61,13 +53,11 @@ def parse_row(row, headers, headers_use, fns, sensitive, target, thresh1, thresh
         if hdr == sensitive:
             sens_att = binarize_sensattr(x, hdr, thresh1, thresh2)
 
-    # sens_att = new_row_dict[sensitive]
     label = new_row_dict[target]
     new_row = []
     for h in headers_use:
         new_row = new_row + new_row_dict[h]
     return new_row, label, sens_att
-
 
 def whiten(X, mn, std):
     mntile = np.tile(mn, (X.shape[0], 1))
@@ -75,7 +65,6 @@ def whiten(X, mn, std):
     X = X - mntile
     X = np.divide(X, stdtile)
     return X
-
 
 def get_adult_data(target, sensitive, clr_ratio):
     thresh1, thresh2 = 0, 0
@@ -95,8 +84,6 @@ def get_adult_data(target, sensitive, clr_ratio):
 
     f_in_tr = "./data/adult/adult.data"
     f_in_te = "./data/adult/adult.test"
-    # hd_file = './data/adult/adult.headers'
-    # header_list = open(hd_file, 'w')
 
     REMOVE_MISSING = True
     MISSING_TOKEN = "?"
@@ -107,9 +94,6 @@ def get_adult_data(target, sensitive, clr_ratio):
     headers_use = "age,workclass,education,education-num,marital-status,occupation,relationship,race,capital-gain,capital-loss,hours-per-week,native-country".split(
         ","
     )
-
-    # f_out_csv = './data/adult/adult.csv'
-    # f_out_np = f'./data/adult/adult_salary_{sensitive}.npz'
 
     options = {
         "age": "buckets",
@@ -195,26 +179,7 @@ def get_adult_data(target, sensitive, clr_ratio):
     D["training"]["X"] = whiten(D["training"]["X"], mn, std)
     D["test"]["X"] = whiten(D["test"]["X"], mn, std)
 
-    # should write headers file
-    # f = open(hd_file, 'w')
-    # i = 0
-    # for h in headers_use:
-    #     if options[h] == 'continuous':
-    #         f.write('{:d},{}\n'.format(i, h))
-    #         i += 1
-    #     elif options[h][0] == 'buckets':
-    #         for b in buckets[h]:
-    #             colname = '{}_{:d}'.format(h, b)
-    #             f.write('{:d},{}\n'.format(i, colname))
-    #             i += 1
-    #     else:
-    #         for opt in options[h]:
-    #             colname = '{}_{}'.format(h, opt)
-    #             f.write('{:d},{}\n'.format(i, colname))
-    #             i += 1
-
     n = D["training"]["X"].shape[0]
-    # shuf = np.random.permutation(n)
     unshuf = np.arange(n)
     valid_pct = 0.2
     valid_ct = int(n * valid_pct)
@@ -237,8 +202,6 @@ def get_adult_data(target, sensitive, clr_ratio):
     total_e = sum(D["test"]["Y"])
     total_ie = D["test"]["Y"].shape[0] - sum(D["test"]["Y"])
 
-    # print(total_p, total_up, total_e, total_ie)
-
     priv_elg = sum(D["test"]["Y"] * D["test"]["A"])
     priv_inelg = total_p - priv_elg
     unpriv_elg = total_e - priv_elg
@@ -246,8 +209,10 @@ def get_adult_data(target, sensitive, clr_ratio):
 
     min_num = int(min(priv_elg, priv_inelg, unpriv_elg, unpriv_inelg))
 
-    print("here", priv_elg, priv_inelg, unpriv_elg, unpriv_inelg)
-    print(min_num)
+    print("Privileged eligible", priv_elg)
+    print("Privileged ineligible", priv_inelg)
+    print("Unprivileged eligible", unpriv_elg)
+    print("Unprivileged ineligible", unpriv_inelg)
 
     priv_elg_inds = D["test"]["Y"] * D["test"]["A"] > 0
     priv_elg_test_X = D["test"]["X"][priv_elg_inds][0:min_num]
@@ -299,14 +264,4 @@ def get_adult_data(target, sensitive, clr_ratio):
         "train_inds": train_inds,
         "valid_inds": valid_inds,
     }
-    # print(D['training']['A'].shape, sum(D['training']['A']))
     return data_dict
-    # np.savez(f_out_np,
-    #          x_train=D['training']['X'],
-    #          x_test=D['test']['X'],
-    #          y_train=D['training']['Y'],
-    #          y_test=D['test']['Y'],
-    #          attr_train=D['training']['A'],
-    #          attr_test=D['test']['A'],
-    #          train_inds=train_inds,
-    #          valid_inds=valid_inds)

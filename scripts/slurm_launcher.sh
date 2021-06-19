@@ -12,7 +12,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTIONS=d:
-LONGOPTS=odir:,bck:,useshade:,label:,beta_1:,beta_2:,green_1:,green_2:,gw:,dp:,epr:,opr:,expn:,ddir:,dsetname:,ptnc:,wd:,dpt:,ewd:,edpt:,awd:,adpt:,zdim:,seed:,num_epochs:,batch_size:,usebatchnorm:,sattr:,wdbn:,arch:,fair_coeff:,aud_steps:,adv_coeff:,gamma:,alpha:,d_coeff:,which_class:,green_yellow:,egr:,ogr:,measure_sattr:
+LONGOPTS=odir:,bck:,useshade:,label:,beta_1:,beta_2:,expn:,ddir:,dsetname:,ptnc:,wd:,dpt:,ewd:,edpt:,awd:,adpt:,zdim:,seed:,num_epochs:,batch_size:,usebatchnorm:,sattr:,wdbn:,arch:,fair_coeff:,aud_steps:,adv_coeff:,gamma:,alpha:,green_yellow:,egr:,ogr:
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -40,18 +40,8 @@ egr=0.5
 ogr=0.5
 green_yellow="True"
 sattr="bck"
-measure_sattr="bck"
-
-green_1=0
-green_2="False"
-gw=0
-digit_pattern=0
-epr=0.0
-opr=0.0
-
 
 # DATASET ARGS END
-
 homedir="/home/charanr/"
 repo="$homedir/FairDeepLearning"
 oroot="/scratch/charanr/fairness-project"
@@ -83,8 +73,6 @@ aud_steps=2
 adv_coeff=0.1
 gamma=10
 alpha=10
-d_coeff=0.1
-which_class=1
 # EXPERIMENT ARGS END
 
 while true; do
@@ -112,30 +100,6 @@ while true; do
             ;;
         --beta_2)
             beta_2="$2"
-            shift 2
-            ;;
-        --green_1)
-            green_1="$2"
-            shift 2
-            ;;
-        --green_2)
-            green_2="$2"
-            shift 2
-            ;;
-        --gw)
-            gw="$2"
-            shift 2
-            ;;
-        --dp)
-            digit_pattern="$2"
-            shift 2
-            ;;
-        --epr)
-            epr="$2"
-            shift 2
-            ;;
-        --opr)
-            opr="$2"
             shift 2
             ;;
         --expn)
@@ -194,20 +158,12 @@ while true; do
             batch_size="$2"
             shift 2
             ;;
-        --numhrs)
-            numhrs="$2"
-            shift 2
-            ;;
         --usebatchnorm)
             usebatchnorm="$2"
             shift 2
             ;;
         --sattr)
             sattr="$2"
-            shift 2
-            ;;
-        --measure_sattr)
-            measure_sattr="$2"
             shift 2
             ;;
         --wdbn)
@@ -236,14 +192,6 @@ while true; do
             ;;
         --alpha)
             alpha="$2"
-            shift 2
-            ;;
-        --d_coeff)
-            d_coeff="$2"
-            shift 2
-            ;;
-        --which_class)
-            which_class="$2"
             shift 2
             ;;
         --green_yellow)
@@ -275,22 +223,6 @@ done
 
 echo "Creating output directory $odir and copying MNIST data into $data_dir"
 mkdir -p $odir $data_dir
-#cp -r ./data/MNIST $data_dir
-
-#echo "Starting mnist_loader"
-#set -o xtrace
-#python dataloaders/mnist_loader.py --data_dir $data_dir\
-#    --bck $bck\
-#    --label $label\
-#    --clr_ratio \($beta_1,$beta_2\)\
-#    --egr $egr\
-#    --ogr $ogr\
-#    --green_1 $green_1\
-#    --green_width $gw\
-#    --e_pat_ratio $epr\
-#    --o_pat_ratio $opr\
-#    --output_dir $odir
-#set +o xtrace
 
 echo "Starting training"
 set -o xtrace
@@ -314,21 +246,13 @@ python -u train/execute.py --wandb_name $wandb_name\
     --beta_2 $beta_2\
     --egr $egr\
     --ogr $ogr\
-    --green_1 $green_1\
-    --gw $gw\
-    --digit_pattern $digit_pattern\
-    --epr $epr\
-    --opr $opr\
     --sensattr $sattr\
-    --measure_sensattr $measure_sattr\
     --seed $seed\
     --zdim $zdim\
     --fair_coeff $fair_coeff\
     --adv_coeff $adv_coeff\
     --gamma $gamma\
     --alpha $alpha\
-    --d_coeff $d_coeff\
-    --which_class $which_class\
     --ifwandb True
 
 set +o xtrace

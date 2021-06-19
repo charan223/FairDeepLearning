@@ -44,7 +44,6 @@ class Dataset:
     ):
         if self.args.data == "clr-mnist":
             if which_set == "train":
-                # numpy arrays
                 x = self.train_loader.img
                 y = self.train_loader.eo_lbl
                 a = self.train_loader.att
@@ -63,7 +62,6 @@ class Dataset:
                 raise KeyError("Valid sets are: train, valid, and test.")
         elif self.args.data:
             if which_set == "train":
-                # numpy arrays
                 x = self.train_loader.X
                 y = self.train_loader.Y
                 a = self.train_loader.A
@@ -172,14 +170,7 @@ def clr_mnist(args, device):
         green_yellow=args.green_yellow,
         egr=args.egr,
         ogr=args.ogr,
-        green_1=0,
-        green_2=False,
-        green_width=0,
-        digit_pattern=0,
-        e_pat_ratio=0.0,
-        o_pat_ratio=0.0,
         sensitiveattr=args.sensattr,
-        measure_sensitiveattr=args.measure_sensattr,
         transform_list=[],
         out_channels=3,
     )
@@ -193,14 +184,7 @@ def clr_mnist(args, device):
         green_yellow=args.green_yellow,
         egr=args.egr,
         ogr=args.ogr,
-        green_1=0,
-        green_2=False,
-        green_width=0,
-        digit_pattern=0,
-        e_pat_ratio=0.0,
-        o_pat_ratio=0.0,
         sensitiveattr=args.sensattr,
-        measure_sensitiveattr=args.measure_sensattr,
         transform_list=[],
         out_channels=3,
     )
@@ -214,14 +198,7 @@ def clr_mnist(args, device):
         green_yellow=args.green_yellow,
         egr=0.5,
         ogr=0.5,
-        green_1=0,
-        green_2=False,
-        green_width=0,
-        digit_pattern=0,
-        e_pat_ratio=0.0,
-        o_pat_ratio=0.0,
         sensitiveattr=args.sensattr,
-        measure_sensitiveattr=args.measure_sensattr,
         transform_list=[],
         out_channels=3,
     )
@@ -253,9 +230,6 @@ class DatasetIterator(collections.Iterator):
             raise StopIteration
         else:
             inds = self.inds[self.curr]
-            # for t in self.tensors[-1:]:
-            # print(f"t = {t}")
-            # print(f"TYPE: inds = {inds}, {type(self.tensors)}, {self.tensors[0].shape}, {self.tensors[0][0].shape}")
             minibatch = [t[inds] for t in self.tensors]
             self.curr += 1
             return minibatch
