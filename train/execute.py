@@ -113,17 +113,17 @@ def get_iters(args, dataset):
 
     def new_train_iter():
         return dataset.get_batch_iterator(
-            "train", args.batch_size, shuffle=True, keep_remainder=False, seed=None
+            "train", args.batch_size, shuffle=True, keep_remainder=False, seed=args.seed
         )
 
     def new_valid_iter():
         return dataset.get_batch_iterator(
-            "valid", args.batch_size, shuffle=False, keep_remainder=False, seed=None
+            "valid", args.batch_size, shuffle=True, keep_remainder=False, seed=args.seed
         )
 
     def new_test_iter():
         return dataset.get_batch_iterator(
-            "test", args.batch_size, shuffle=False, keep_remainder=False, seed=None
+            "test", args.batch_size, shuffle=True, keep_remainder=False, seed=args.seed
         )
 
     return new_train_iter(), new_valid_iter(), new_test_iter()

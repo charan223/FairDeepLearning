@@ -54,7 +54,7 @@ def train_precompute(args, device, dataset):
         [1.0 / (1.0 - train_base_1), 1.0 / (train_base_1)]
     ).to(device)
     reweight_attr_tensors = [reweight_attr_0_tensor, reweight_attr_1_tensor]
-
+    
     print("Average value of A = {}".format(np.mean(train_target_attrs)))
     print("A: sensitive attribute = 0/1")
     return reweight_target_tensor, reweight_attr_tensors

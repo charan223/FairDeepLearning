@@ -326,3 +326,32 @@ class MNISTthin:
 
     def normalize(self, img):
         return (img / 255.0) * 2.0 - 1.0  # [-1, +1]
+
+def prep_data(
+    data_dir="./data",
+):
+
+    print("data dir:", data_dir)
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
+    # if not exist, download mnist dataset
+    import tensorflow.compat.v1 as tf
+
+    tf.disable_v2_behavior()
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(
+        path="mnist.npz"
+    )
+    x_train, x_test = x_train / 255.0, x_test / 255.0
+
+    join_data = lambda *s: os.path.join(data_dir, *s)
+
+    np.save(join_data("train-images.npy"), x_train)
+    np.save(join_data("test-images.npy"), x_test)
+    np.save(join_data("train-labels.npy"), y_train)
+    np.save(join_data("test-labels.npy"), y_test)
+    
+    return
+
+if __name__ == "__main__":
+    fire.Fire(prep_data)
