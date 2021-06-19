@@ -114,7 +114,7 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
 
     torch.autograd.set_detect_anomaly(True)
     with torch.no_grad():
-        for xs, ys, attrs, measure_attrs in test_loader:
+        for xs, ys, attrs in test_loader:
             if not args.model_name == "conv" and not args.model_name == "ffvae":
                 xs = xs.reshape(len(xs), -1)
             xs, ys, attrs = (
@@ -139,18 +139,13 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
                 pre_softmax, cost_dict = model(xs, ys, attrs, "test")
 
             test_pre_softmax.append(pre_softmax.data)
-
             test_label.append(ys.data)
-
-            # Changing this
             test_sensitiveattr.append(attrs.data)
-            # test_sensitiveattr.append(measure_attrs.data)
 
             stats = dict((n, c.item()) for (n, c) in cost_dict.items())
             average_meters.update_dict(stats)
 
-        test_data = None  # n_test, 3, 32, 32
-        # n_test, n_classes (=10)
+        test_data = None 
         test_pre_softmax = torch.cat(test_pre_softmax, dim=0)
 
         if args.model_name != "laftr":
