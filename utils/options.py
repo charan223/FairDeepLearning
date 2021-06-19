@@ -91,6 +91,8 @@ def add_shared_args(parser):
                  help='Max number of epochs to train (default: 30)')
     add_argument(parser, '--patience', default=5, type=check_positive,
                  help='patience for early stopping shared between all metrics (default: 5)')
+    add_argument(parser, '--estopping', action='store_false', default=True,
+                 help='early stopping or not')
 
     add_argument(parser, '--no-cuda', action='store_true', default=False,
                  help='disables CUDA training (default: False)')
