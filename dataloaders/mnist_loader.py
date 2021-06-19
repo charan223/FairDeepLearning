@@ -88,7 +88,6 @@ class MNISTthin:
             egr=egr,
             ogr=ogr,
         )
-        self.measure_att = self.att[self.measure_sensitiveattr]
         self.att = self.att[self.sensitiveattr]
         self.eo_lbl = (lbl % 2 == 0).astype(np.uint8)
         self.lbl = lbl
