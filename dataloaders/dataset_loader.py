@@ -47,17 +47,14 @@ class Dataset:
                 x = self.train_loader.img
                 y = self.train_loader.eo_lbl
                 a = self.train_loader.att
-                measure_a = self.train_loader.measure_att
             elif which_set == "valid":
                 x = self.valid_loader.img
                 y = self.valid_loader.eo_lbl
                 a = self.valid_loader.att
-                measure_a = self.valid_loader.measure_att
             elif which_set == "test":
                 x = self.test_loader.img
                 y = self.test_loader.eo_lbl
                 a = self.test_loader.att
-                measure_a = self.test_loader.measure_att
             else:
                 raise KeyError("Valid sets are: train, valid, and test.")
         elif self.args.data:
@@ -65,17 +62,14 @@ class Dataset:
                 x = self.train_loader.X
                 y = self.train_loader.Y
                 a = self.train_loader.A
-                measure_a = self.train_loader.A
             elif which_set == "valid":
                 x = self.valid_loader.X
                 y = self.valid_loader.Y
                 a = self.valid_loader.A
-                measure_a = self.valid_loader.A
             elif which_set == "test":
                 x = self.test_loader.X
                 y = self.test_loader.Y
                 a = self.test_loader.A
-                measure_a = self.test_loader.A
             else:
                 raise KeyError("Valid sets are: train, valid, and test.")
         else:
@@ -83,7 +77,7 @@ class Dataset:
 
         sz = x.shape[0]
         batch_inds = make_batch_inds(sz, batch_size, shuffle, keep_remainder, seed)
-        iterator = DatasetIterator([x, y, a, measure_a], batch_inds)
+        iterator = DatasetIterator([x, y, a], batch_inds)
         return iterator
 
     def get_A_proportions(self):
