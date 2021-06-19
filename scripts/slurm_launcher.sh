@@ -12,7 +12,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTIONS=d:
-LONGOPTS=ddir:,odir:,dsetname:,beta_1:,beta_2:,green_yellow:,egr:,ogr:,sattr:,edpt:,ewd:,adpt:,awd:,cdpt:,cwd:,zdim:,seed:,arch:,fair_coeff:,aud_steps:,adv_coeff:,gamma:,alpha:,replicate:,num_epochs:,ptnc:,wdbn:
+LONGOPTS=ddir:,odir:,dsetname:,beta_1:,beta_2:,egr:,ogr:,sattr:,edpt:,ewd:,adpt:,awd:,cdpt:,cwd:,zdim:,seed:,arch:,fair_coeff:,aud_steps:,adv_coeff:,gamma:,alpha:,replicate:,num_epochs:,ptnc:,wdbn:
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -43,7 +43,6 @@ mkdir -p $odir $ddir
 dsetname="clr-mnist"
 beta_1="0.5"
 beta_2="0.5"
-green_yellow="True"
 egr=0.5
 ogr=0.5
 sattr="bck"
@@ -95,10 +94,6 @@ while true; do
             ;;
         --beta_2)
             beta_2="$2"
-            shift 2
-            ;;
-        --green_yellow)
-            green_yellow="$2"
             shift 2
             ;;
         --egr)
@@ -212,7 +207,6 @@ python -u train/execute.py \
     --data $dsetname\
     --beta_1 $beta_1\
     --beta_2 $beta_2\
-    --green_yellow $green_yellow\
     --egr $egr\
     --ogr $ogr\
     --sensattr $sattr\

@@ -15,7 +15,6 @@ dataset = ['clr-mnist']
 seeds = [3, 4, 5]
 clr_ratios = [(0.5, 0.5)]
 sensitiveattrs = ['bck', 'color_gy']
-green_yellows = [True]
 pos_ratios = [(0.5, 0.5), (0.75, 0.25), (0.9, 0.1)]
 
 archs = ['laftr-dp', 'laftr-eqopp0', 'laftr-eqopp1', 'laftr-eqodd']
@@ -43,7 +42,7 @@ patiences = [5]
 
 all_experiments = list(itertools.product(data_dir, out_dir, 
                                          dataset,
-                                         clr_ratios, green_yellows, pos_ratios,
+                                         clr_ratios, pos_ratios,
                                          sensitiveattrs,
                                          edepths, ewidths, adepths, 
                                          awidths, cdepths, cwidths,
@@ -63,27 +62,26 @@ for idx, exp in enumerate(all_experiments):
                f" --dsetname {exp[2]}"\
                f" --beta_1 {exp[3][0]}"\
                f" --beta_2 {exp[3][1]}"\
-               f" --green_yellow {exp[4]}"\
-               f" --egr {exp[5][0]}"\
-               f" --ogr {exp[5][1]}"\
-               f" --sattr {exp[6]}"\
-               f" --edpt {exp[7]}"\
-               f" --ewd {exp[8]}"\
-               f" --adpt {exp[9]}"\
-               f" --awd {exp[10]}"\
-               f" --cdpt {exp[11]}"\
-               f" --cwd {exp[12]}"\
-               f" --zdim {exp[13]}"\
-               f" --seed {exp[14]}"\
-               f" --arch {exp[15]}"\
-               f" --fair_coeff {exp[16]}"\
-               f" --aud_steps {exp[17]}"\
-               f" --adv_coeff {exp[18]}"\
-               f" --gamma {exp[19]}"\
-               f" --alpha {exp[20]}"\
-               f" --replicate {exp[21]}"\
-               f" --num_epochs {exp[22]}"\
-               f" --ptnc {exp[23]}"\
+               f" --egr {exp[4][0]}"\
+               f" --ogr {exp[4][1]}"\
+               f" --sattr {exp[5]}"\
+               f" --edpt {exp[6]}"\
+               f" --ewd {exp[7]}"\
+               f" --adpt {exp[8]}"\
+               f" --awd {exp[9]}"\
+               f" --cdpt {exp[10]}"\
+               f" --cwd {exp[11]}"\
+               f" --zdim {exp[12]}"\
+               f" --seed {exp[13]}"\
+               f" --arch {exp[14]}"\
+               f" --fair_coeff {exp[15]}"\
+               f" --aud_steps {exp[16]}"\
+               f" --adv_coeff {exp[17]}"\
+               f" --gamma {exp[18]}"\
+               f" --alpha {exp[19]}"\
+               f" --replicate {exp[20]}"\
+               f" --num_epochs {exp[21]}"\
+               f" --ptnc {exp[22]}"\
 
     hashed_id = int(hashlib.sha1(MAIN_CMD.encode(
         'utf-8')).hexdigest(), 16) % (10 ** 8)
