@@ -14,7 +14,6 @@ from utils.options import parse_args
 from utils.log_utils import save_args
 from dataloaders.dataset_loader import Dataset
 from dataloaders.adult_loader import AdultDataset
-from models import ModelFactory, MODEL_REGISTRY
 from utils.log_utils import (
     TrainLog,
     AverageMeterSet,
@@ -113,17 +112,17 @@ def get_iters(args, dataset):
 
     def new_train_iter():
         return dataset.get_batch_iterator(
-            "train", args.batch_size, shuffle=True, keep_remainder=False, seed=None
+            "train", args.batch_size, shuffle=True, keep_remainder=False, seed=args.seed
         )
 
     def new_valid_iter():
         return dataset.get_batch_iterator(
-            "valid", args.batch_size, shuffle=False, keep_remainder=False, seed=None
+            "valid", args.batch_size, shuffle=True, keep_remainder=False, seed=args.seed
         )
 
     def new_test_iter():
         return dataset.get_batch_iterator(
-            "test", args.batch_size, shuffle=False, keep_remainder=False, seed=None
+            "test", args.batch_size, shuffle=True, keep_remainder=False, seed=args.seed
         )
 
     return new_train_iter(), new_valid_iter(), new_test_iter()
@@ -187,8 +186,12 @@ def get_args(wandb):
     if not args.name:
         args.name = "%s" % ("".join(time.ctime().split()))
 
-    if args.arch[0:5] == "laftr" or args.arch[0:5] == "cfair":
-        args.model_name = args.arch[0:5]
+    if "ffvae" in args.arch:
+        args.model_name = args.arch
+    elif "laftr" in args.arch:
+        args.model_name = "laftr"
+    elif "cfair" in args.arch:
+        args.model_name = "cfair"
     else:
         args.model_name = args.arch
 
@@ -205,21 +208,22 @@ def get_args(wandb):
     if args.data == "adult":
         args.input_dim = 112
         args.measure_sensattr = args.sensattr
-        if args.model_name == "laftr":
+
+        if "ffvae" in args.model_name:
+            args.zdim = 60
+            args.adepth, args.edepth, args.cdepth = 1, 1, 1
+            args.awidths, args.ewidths, args.cwidths = 200, 200, 200
+            args.batch_size = 64
+        elif "laftr" in args.model_name:
             args.zdim = 8
             args.aud_steps = 1
             args.adepth, args.edepth, args.cdepth = 0, 0, 0
             args.awidths, args.ewidths, args.cwidths = 0, 0, 0
             args.batch_size = 64
-        elif args.model_name == "cfair":
+        elif "cfair" in args.model_name:
             args.zdim = 60
             args.adepth, args.edepth, args.cdepth = 1, 0, 0
             args.awidths, args.ewidths, args.cwidths = 50, 0, 0
-            args.batch_size = 64
-        elif args.model_name == "ffvae":
-            args.zdim = 60
-            args.adepth, args.edepth, args.cdepth = 1, 1, 1
-            args.awidths, args.ewidths, args.cwidths = 200, 200, 200
             args.batch_size = 64
 
     save_args(args, os.path.join(args.output_dir, "args.json"))
@@ -290,8 +294,13 @@ def save_early_stopping_logs(
 
 
 def get_model(args):
-    model = ModelFactory.build_model(args.model_name, args).to(args.device)
-
+    class_names = {"cfair": "CFairNet", "conv": "ConvNet", "ffvae": "Ffvae", "laftr": "LaftrNet", "mlp": "MLPNet", "ffvae_cfair": "Ffvae_cfair", "ffvae_laftr": "Ffvae_laftr"}
+    if args.model_name == "ffvae_cfair" or args.model_name == "ffvae_laftr":
+        mod = import_module('.ablations.model_'+args.model_name, package="models")
+        model = getattr(mod, class_names[args.model_name]).build_model(args).to(args.device)
+    else:
+        mod = import_module('.model_'+args.model_name, package="models")
+        model = getattr(mod, class_names[args.model_name]).build_model(args).to(args.device)
     return model
 
 
@@ -420,7 +429,7 @@ if __name__ == "__main__":
 
     print("\nTRAINING:\n")
     time_start = time.time()
-    if args.model_name == "ffvae":
+    if "ffvae" in args.model_name:
         train_vae(args, model, early_stopping_vae, dataset, train_log, test_log)
 
     train_model(

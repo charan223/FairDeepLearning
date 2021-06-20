@@ -4,7 +4,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import register_model
 import torch.utils.data
 from models.model_cfair import grad_reverse
 from models.model_mlp import MLP as MLP_cfair
@@ -119,17 +118,16 @@ class MLP(nn.Module):
             )
         return
 
-"""Module for FFVAE + CFAIR network
+"""Module for FFVAE + LAFTR network
 Parameters
 ----------
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("ffvae_cfair")
-class Ffvae(nn.Module):
+class Ffvae_laftr(nn.Module):
     """Initializes FFVAE network: VAE encoder, MLP classifier, MLP discriminator"""
     def __init__(self, args):
-        super(Ffvae, self).__init__()
+        super(Ffvae_laftr, self).__init__()
         self.input_dim = args.input_dim
         self.num_classes = args.num_classes
         self.gamma = args.gamma
@@ -138,6 +136,8 @@ class Ffvae(nn.Module):
         self.sensattr = args.sensattr
         self.device = args.device
         self.data = args.data
+        self.adv_coeff = args.adv_coeff
+        self.arch = args.arch
 
         # VAE encoder
         if self.data == "clr-mnist":
@@ -186,7 +186,7 @@ class Ffvae(nn.Module):
     @staticmethod
     def build_model(args):
         """ Builds FFVAE class """
-        model = Ffvae(args)
+        model = Ffvae_laftr(args)
         return model
 
     def vae_params(self):
@@ -216,7 +216,7 @@ class Ffvae(nn.Module):
         return torch.squeeze(torch.abs(y - y_hat))
     
     def get_weighted_aud_loss(self, L, X, Y, A, A_wts, Y_wts, AY_wts):
-        if self.arch == "laftr-dp" or self.arch == "cfair" or self.arch == "ffvae":
+        if self.arch == "laftr-dp" or self.arch == "cfair" or "ffvae" in self.arch:
             A0_wt = A_wts[0]
             A1_wt = A_wts[1]
             wts = A0_wt * (1 - A) + A1_wt * A

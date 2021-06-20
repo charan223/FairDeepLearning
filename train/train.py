@@ -26,24 +26,22 @@ def train(
     average_meters = AverageMeterSet()
     averages = average_meters.averages()
 
-    if args.model_name == "laftr":
-        A_weights, Y_weights, AY_weights = (
-            dataset.get_A_proportions(),
-            dataset.get_Y_proportions(),
-            dataset.get_AY_proportions(),
-        )
-    elif args.model_name == "cfair":
-        reweight_target_tensor, reweight_attr_tensors = train_precompute(
-            args, args.device, dataset
-        )
+    A_weights, Y_weights, AY_weights = (
+        dataset.get_A_proportions(),
+        dataset.get_Y_proportions(),
+        dataset.get_AY_proportions(),
+    )
+    reweight_target_tensor, reweight_attr_tensors = train_precompute(
+        args, args.device, dataset
+    )
 
     torch.autograd.set_detect_anomaly(True)
 
-    num=args.d_coeff
+    num = args.replicate
     train_loader, new_train_loader = tee(train_loader)
     for _ in range(int(num)):
         new_train_loader, train_loader = tee(new_train_loader)
-        for batch_idx, (xs, ys, attrs, _) in enumerate(train_loader):
+        for batch_idx, (xs, ys, attrs) in enumerate(train_loader):
 
             if not args.model_name == "conv" and not args.model_name == "ffvae":
                 xs = xs.reshape(len(xs), -1)
@@ -58,16 +56,8 @@ def train(
                 attrs.type(torch.LongTensor).to(device),
             )
 
-            if args.model_name == "cfair":
-                pre_softmax, cost_dict = model(
-                    xs, ys, attrs, "train", reweight_target_tensor, reweight_attr_tensors
-                )
-            elif args.model_name == "laftr":
-                pre_softmax, cost_dict = model(
-                    xs, ys, attrs, "train", A_weights, Y_weights, AY_weights
-                )
-            else:
-                pre_softmax, cost_dict = model(xs, ys, attrs, "train")
+            pre_softmax, cost_dict = model(
+                xs, ys, attrs, "train", A_weights, Y_weights, AY_weights, reweight_target_tensor, reweight_attr_tensors)
 
             # get the index of the max log-probability
             if args.model_name != "laftr":
@@ -90,7 +80,8 @@ def train(
                     train_log.record(args.global_step, averages)
 
     print(
-        "Epoch ", epoch, " ended. %.1fm/ep" % (float(time.time() - start_epoch) / 60.0)
+        "Epoch ", epoch, " ended. %.1fm/ep" % (
+            float(time.time() - start_epoch) / 60.0)
     )
     return averages
 
@@ -101,20 +92,18 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
     test_data, test_pre_softmax = [], []
     test_original_label, test_label, test_sensitiveattr = [], [], []
 
-    if args.model_name == "laftr":
-        A_weights, Y_weights, AY_weights = (
-            dataset.get_A_proportions(),
-            dataset.get_Y_proportions(),
-            dataset.get_AY_proportions(),
-        )
-    elif args.model_name == "cfair":
-        reweight_target_tensor, reweight_attr_tensors = train_precompute(
-            args, args.device, dataset
-        )
+    A_weights, Y_weights, AY_weights = (
+        dataset.get_A_proportions(),
+        dataset.get_Y_proportions(),
+        dataset.get_AY_proportions(),
+    )
+    reweight_target_tensor, reweight_attr_tensors = train_precompute(
+        args, args.device, dataset
+    )
 
     torch.autograd.set_detect_anomaly(True)
     with torch.no_grad():
-        for xs, ys, attrs, measure_attrs in test_loader:
+        for xs, ys, attrs in test_loader:
             if not args.model_name == "conv" and not args.model_name == "ffvae":
                 xs = xs.reshape(len(xs), -1)
             xs, ys, attrs = (
@@ -127,30 +116,17 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
                 attrs.type(torch.LongTensor).to(device),
             )
 
-            if args.model_name == "cfair":
-                pre_softmax, cost_dict = model(
-                    xs, ys, attrs, "test", reweight_target_tensor, reweight_attr_tensors
-                )
-            elif args.model_name == "laftr":
-                pre_softmax, cost_dict = model(
-                    xs, ys, attrs, "test", A_weights, Y_weights, AY_weights
-                )
-            else:
-                pre_softmax, cost_dict = model(xs, ys, attrs, "test")
+            pre_softmax, cost_dict = model(
+                xs, ys, attrs, "test", A_weights, Y_weights, AY_weights, reweight_target_tensor, reweight_attr_tensors)
 
             test_pre_softmax.append(pre_softmax.data)
-
             test_label.append(ys.data)
-
-            # Changing this
             test_sensitiveattr.append(attrs.data)
-            # test_sensitiveattr.append(measure_attrs.data)
 
             stats = dict((n, c.item()) for (n, c) in cost_dict.items())
             average_meters.update_dict(stats)
 
-        test_data = None  # n_test, 3, 32, 32
-        # n_test, n_classes (=10)
+        test_data = None
         test_pre_softmax = torch.cat(test_pre_softmax, dim=0)
 
         if args.model_name != "laftr":
@@ -164,16 +140,11 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
             )
             test_predicted = ((test_pre_softmax > 0.5) > 0).type(torch.uint8)
 
-        test_original_label = None  # n_test  [0, 9]
-        # n_test  [0, 1]
+        test_original_label = None
         test_label = torch.cat(test_label, dim=0)
-        print(test_label)
-        print(sum(test_label))
-        print(test_predicted)
-        print(sum(test_predicted))
-        test_sensitiveattr = torch.cat(test_sensitiveattr, dim=0)  # n_test  [0, 2]
+        test_sensitiveattr = torch.cat(
+            test_sensitiveattr, dim=0)
 
-    # Costs:
     averages = average_meters.averages()
     print("{}Costs:\n{}".format(mode_name + " ", averages))
 
@@ -185,7 +156,6 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
         predicted=test_predicted.cpu().numpy(),
         original_label=test_original_label,
         label=test_label.cpu().numpy(),
-        # TODO: CHECK THE INPUTS ARE CORRECT OR NOT!!!
         sensitiveattr=test_sensitiveattr.cpu().numpy(),
         positive_pred=dataset.pos_label,  # defined by dataset collector
         privileged_vals=dataset.privileged_vals,  # defined by dataset collector
@@ -212,7 +182,6 @@ def test(args, model, device, dataset, test_loader, test_log, mode_name=""):
     logs.update(mtrs)
 
     print(logs)
-    # log
     if test_log:
         test_log.record(args.global_step, logs)
     return logs
@@ -227,9 +196,15 @@ def train_ffvae(
     average_meters = AverageMeterSet()
     averages = average_meters.averages()
 
+    reweight_target_tensor, reweight_attr_tensors = torch.tensor([1.0, 1.0]).to(
+        device), [torch.tensor([1.0, 1.0]).to(device), torch.tensor([1.0, 1.0]).to(device)]
+
+    A_weights, Y_weights, AY_weights = dataset.get_A_proportions(
+    ), dataset.get_Y_proportions(), dataset.get_AY_proportions()
+
     torch.autograd.set_detect_anomaly(True)
 
-    for batch_idx, (xs, ys, attrs, _) in enumerate(train_loader):
+    for batch_idx, (xs, ys, attrs) in enumerate(train_loader):
         xs, ys, attrs = (
             torch.from_numpy(xs).to(device),
             torch.from_numpy(ys).to(device),
@@ -240,7 +215,8 @@ def train_ffvae(
             attrs.type(torch.LongTensor).to(device),
         )
 
-        _, cost_dict = model(xs, ys, attrs, "ffvae_train")
+        _, cost_dict = model(xs, ys, attrs, "ffvae_train",  A_weights, Y_weights,
+                             AY_weights, reweight_target_tensor, reweight_attr_tensors)
 
         stats = dict((n, c.item()) for (n, c) in cost_dict.items())
         average_meters.update_dict(stats)
@@ -249,7 +225,8 @@ def train_ffvae(
 
         if batch_idx % args.log_interval == 0:
             averages = average_meters.averages()
-            print("EPOCH: ", epoch, " BATCH IDX: ", batch_idx, " AVGs: ", averages)
+            print("EPOCH: ", epoch, " BATCH IDX: ",
+                  batch_idx, " AVGs: ", averages)
             if train_log:
                 train_log.record(args.global_step, averages)
 
@@ -270,8 +247,13 @@ def test_ffvae(
     ones = torch.ones(args.batch_size, dtype=torch.long, device=device)
     zeros = torch.zeros(args.batch_size, dtype=torch.long, device=device)
 
+    A_weights, Y_weights, AY_weights = dataset.get_A_proportions(
+    ), dataset.get_Y_proportions(), dataset.get_AY_proportions()
+    reweight_target_tensor, reweight_attr_tensors = torch.tensor([1.0, 1.0]).to(
+        device), [torch.tensor([1.0, 1.0]).to(device), torch.tensor([1.0, 1.0]).to(device)]
+
     with torch.no_grad():
-        for batch_idx, (xs, ys, attrs, _) in enumerate(test_loader):
+        for batch_idx, (xs, ys, attrs) in enumerate(test_loader):
             xs, ys, attrs = (
                 torch.from_numpy(xs).to(device),
                 torch.from_numpy(ys).to(device),
@@ -282,7 +264,8 @@ def test_ffvae(
                 attrs.type(torch.LongTensor).to(device),
             )
 
-            _, cost_dict = model(xs, ys, attrs, "test")
+            _, cost_dict = model(xs, ys, attrs, "test",  A_weights, Y_weights,
+                                 AY_weights, reweight_target_tensor, reweight_attr_tensors)
 
             stats = dict((n, c.item()) for (n, c) in cost_dict.items())
             average_meters.update_dict(stats)

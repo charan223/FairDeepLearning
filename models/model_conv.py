@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
 from models.model_mlp import MLP
-from . import register_model
 
 
 """Module for a single Convolutional Neural Network (CNN) unit
@@ -57,7 +56,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("conv")
 class ConvNet(nn.Module):
     """Initializes CNN network and an MLP classifier"""
     def __init__(self, args):
@@ -96,7 +94,7 @@ class ConvNet(nn.Module):
         """Returns optimizer over all parameters of the network"""
         return torch.optim.Adam(self.all_params())
 
-    def forward(self, inputs, labels, attrs, mode="train"):
+    def forward(self, inputs, labels, attrs, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder and classifier,
             Computes backward pass on the target function"""
         # Make inputs between 0, 1

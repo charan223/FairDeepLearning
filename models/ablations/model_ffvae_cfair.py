@@ -4,7 +4,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import register_model
 import torch.utils.data
 from models.model_cfair import grad_reverse
 from models.model_mlp import MLP as MLP_cfair
@@ -15,6 +14,8 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
+
+
 class ConvVAE(nn.Module):
     # Input to ConvVAE is resized to 32 * 32 * 3, each pixel has 3 float values
     # between 0, 1 to represent each of RGB channels
@@ -62,7 +63,7 @@ class ConvVAE(nn.Module):
     def encode(self, x):
         """encodes input, returns statistics of the distribution"""
         stats = self.enc(x).squeeze()
-        mu, logvar = stats[:, : self.z_dim], stats[:, self.z_dim :]
+        mu, logvar = stats[:, : self.z_dim], stats[:, self.z_dim:]
         return mu, logvar
 
     def decode(self, z):
@@ -81,6 +82,8 @@ zdim: int
 activ: string, default: "leakyrelu"
         Activation function
 """
+
+
 class MLP(nn.Module):
     def __init__(self, num_neurons, zdim, activ="leakyrelu"):
         """Initialized VAE MLP"""
@@ -104,7 +107,7 @@ class MLP(nn.Module):
         for hidden in self.hiddens:
             L = F.leaky_relu(hidden(L))
         if mode == "encode":
-            mu, logvar = L[:, : self.zdim], L[:, self.zdim :]
+            mu, logvar = L[:, : self.zdim], L[:, self.zdim:]
             return mu, logvar
         elif mode == "decode":
             return L.squeeze()
@@ -119,17 +122,20 @@ class MLP(nn.Module):
             )
         return
 
+
 """Module for FFVAE + CFAIR network
 Parameters
 ----------
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("ffvae_cfair")
-class Ffvae(nn.Module):
+
+
+class Ffvae_cfair(nn.Module):
     """Initializes FFVAE network: VAE encoder, MLP classifier, MLP discriminator"""
+
     def __init__(self, args):
-        super(Ffvae, self).__init__()
+        super(Ffvae_cfair, self).__init__()
         self.input_dim = args.input_dim
         self.num_classes = args.num_classes
         self.gamma = args.gamma
@@ -138,13 +144,15 @@ class Ffvae(nn.Module):
         self.sensattr = args.sensattr
         self.device = args.device
         self.data = args.data
+        self.adv_coeff = args.adv_coeff
 
         # VAE encoder
         if self.data == "clr-mnist":
             self.conv_vae = ConvVAE(args)
         else:
             self.enc_neurons = (
-                [self.input_dim] + args.edepth * [args.ewidths] + [2 * args.zdim]
+                [self.input_dim] + args.edepth *
+                [args.ewidths] + [2 * args.zdim]
             )
             self.encoder = MLP(self.enc_neurons, self.zdim).to(args.device)
 
@@ -186,7 +194,7 @@ class Ffvae(nn.Module):
     @staticmethod
     def build_model(args):
         """ Builds FFVAE class """
-        model = Ffvae(args)
+        model = Ffvae_cfair(args)
         return model
 
     def vae_params(self):
@@ -211,8 +219,7 @@ class Ffvae(nn.Module):
         optimizer_class = torch.optim.Adam(self.classifier_params())
         return optimizer_ffvae, optimizer_disc, optimizer_class
 
-    def forward(self, inputs, labels, attrs, mode="train", reweight_target_tensor=None,
-        reweight_attr_tensors=None):
+    def forward(self, inputs, labels, attrs, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder ,
             Computes backward pass on the target function"""
         # Make inputs between 0, 1
@@ -227,7 +234,7 @@ class Ffvae(nn.Module):
         # only non-sensitive dims of latent code modeled as Gaussian
         mu = _mu[:, self.nonsens_idx]
         logvar = _logvar[:, self.nonsens_idx]
-        zb = torch.zeros_like(_mu) 
+        zb = torch.zeros_like(_mu)
         std = (logvar / 2).exp()
         q_zIx = torch.distributions.Normal(mu, std)
 
@@ -250,17 +257,18 @@ class Ffvae(nn.Module):
 
         p_xIz = torch.distributions.Normal(loc=xIz_params, scale=1.0)
         # negative recon error per example
-        logp_xIz = p_xIz.log_prob(x)  
+        logp_xIz = p_xIz.log_prob(x)
 
         recon_term = logp_xIz.reshape(len(x), -1).sum(1)
 
         # prior: get p(z)
-        p_z = torch.distributions.Normal(torch.zeros_like(mu), torch.ones_like(std))
+        p_z = torch.distributions.Normal(
+            torch.zeros_like(mu), torch.ones_like(std))
         # compute analytic KL from q(z|x) to p(z), then ELBO
         kl = torch.distributions.kl_divergence(q_zIx, p_z).sum(1)
 
         # vector el
-        elbo = recon_term - kl  
+        elbo = recon_term - kl
 
         # decode: get p(a|b)
         clf_losses = [
@@ -287,7 +295,8 @@ class Ffvae(nn.Module):
             c_h_relu = h_relu[idx]
             c_cls = F.log_softmax(self.discriminator_cfair[j](c_h_relu), dim=1)
             c_losses.append(c_cls)
-        adv_cost = torch.mean(torch.stack([F.nll_loss(c_losses[j], attrs[labels == j], weight=reweight_attr_tensors[j].type(torch.FloatTensor).to(self.device)) for j in range(self.num_classes)]))
+        adv_cost = torch.mean(torch.stack([F.nll_loss(c_losses[j], attrs[labels == j], weight=reweight_attr_tensors[j].type(
+            torch.FloatTensor).to(self.device)) for j in range(self.num_classes)]))
         ffvae_loss += self.adv_coeff * adv_cost
 
         # shuffling minibatch indexes of b0, b1, z
@@ -300,8 +309,10 @@ class Ffvae(nn.Module):
         logits_joint_prime, probs_joint_prime = self.discriminator(
             z_fake, "discriminator"
         )
-        ones = torch.ones(self.batch_size, dtype=torch.long, device=self.device)
-        zeros = torch.zeros(self.batch_size, dtype=torch.long, device=self.device)
+        ones = torch.ones(self.batch_size, dtype=torch.long,
+                          device=self.device)
+        zeros = torch.zeros(
+            self.batch_size, dtype=torch.long, device=self.device)
         disc_loss = (
             0.5
             * (
@@ -344,6 +355,7 @@ class Ffvae(nn.Module):
 
         return pre_softmax, cost_dict
 
+
 """Function to resize input
 Parameters
 ----------
@@ -355,6 +367,8 @@ Returns
 ----------
 Resized tensor
 """
+
+
 class Resize(torch.nn.Module):
     def __init__(self, size):
         super(Resize, self).__init__()

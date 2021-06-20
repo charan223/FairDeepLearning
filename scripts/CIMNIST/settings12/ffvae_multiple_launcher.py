@@ -1,6 +1,7 @@
 """
-For reproducing ablation experiments in Tables 58, 59 with Ffvae model on Adult dataset
+For reproducing Setting 1, 2 experiments with Ffvae model on CI-MNIST dataset
 """
+
 
 import pandas as pd
 import numpy as np
@@ -11,17 +12,18 @@ import git
 import os
 import hashlib
 
-dataset = ['adult']
+dataset = ['clr-mnist']
 seeds = [3, 4, 5]
-clr_ratios = [(0.5, 0.5), (0.01, 0.01), (0.66, 0.33), (0.1, 0.1), (0.06, 0.36)]
-sensitiveattrs = ['age']
+clr_ratios = [(0.1, 0.1), (0.01, 0.01), (0.001, 0.001),
+              (0.1, 0.9), (0.01, 0.99), (0.5, 0.5)]
+sensitiveattrs = ['bck']
 pos_ratios = [(0.5, 0.5)]
 
-archs = ['ffvae_laftr']
+archs = ['ffvae']
 
-fair_coeffs = [0.1, 0.5, 1.0, 2.0, 4.0]
+fair_coeffs = [1.0]
 aud_steps = [2]
-adv_coeffs = [0.1]
+adv_coeffs = [1.0]
 gammas = [10, 50, 100]
 alphas = [10, 100, 1000]
 

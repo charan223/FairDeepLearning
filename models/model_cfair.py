@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Function
-from . import register_model
 from models.model_mlp import MLP
 
 class GradReverse(Function):
@@ -33,7 +32,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("cfair")
 class CFairNet(nn.Module):
     """Initializes CFAIR network: MLP encoder, MLP classifier, 2 MLP discriminators"""
     def __init__(self, args):
@@ -84,15 +82,7 @@ class CFairNet(nn.Module):
             optim = torch.optim.Adam(self.all_params())
         return optim
 
-    def forward(
-        self,
-        inputs,
-        labels,
-        attrs,
-        mode="train",
-        reweight_target_tensor=None,
-        reweight_attr_tensors=None,
-    ):
+    def forward(self, inputs, labels, attrs, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder ,
             Computes backward pass on the target function"""
         h_relu = inputs

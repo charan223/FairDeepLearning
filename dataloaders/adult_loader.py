@@ -14,8 +14,7 @@ class AdultDataset(Dataset):
     def __init__(self, root_dir, phase, tar_attr, priv_attr, clr_ratio):
         self.tar_attr = tar_attr
         self.priv_attr = priv_attr
-        # self.npz_file = os.path.join(root_dir,'adult.npz')
-        # self.data = np.load(self.npz_file)
+
         self.data = get_adult_data(tar_attr, priv_attr, clr_ratio)
         if phase not in ["train", "val", "test"]:
             raise NotImplementedError

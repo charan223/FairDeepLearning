@@ -4,7 +4,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import register_model
 import torch.utils.data
 
 
@@ -124,7 +123,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("ffvae")
 class Ffvae(nn.Module):
     """Initializes FFVAE network: VAE encoder, MLP classifier, MLP discriminator"""
     def __init__(self, args):
@@ -205,7 +203,7 @@ class Ffvae(nn.Module):
         optimizer_class = torch.optim.Adam(self.classifier_params())
         return optimizer_ffvae, optimizer_disc, optimizer_class
 
-    def forward(self, inputs, labels, attrs, mode="train"):
+    def forward(self, inputs, labels, attrs, mode="train", A_wts=None, Y_wts=None, AY_wts=None, reweight_target_tensor=None, reweight_attr_tensors=None):
         """Computes forward pass through encoder ,
             Computes backward pass on the target function"""
         # Make inputs between 0, 1
