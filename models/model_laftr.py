@@ -3,7 +3,6 @@
 
 import torch
 import torch.nn as nn
-from . import register_model
 from models.model_mlp import MLP
 
 """Module for LAFTR network
@@ -12,7 +11,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("laftr")
 class LaftrNet(nn.Module):
     def __init__(self, args):
         """Initializes LAFTR network: MLP encoder, MLP classifier, MLP discriminator"""

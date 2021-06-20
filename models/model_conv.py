@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
 from models.model_mlp import MLP
-from . import register_model
 
 
 """Module for a single Convolutional Neural Network (CNN) unit
@@ -57,7 +56,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("conv")
 class ConvNet(nn.Module):
     """Initializes CNN network and an MLP classifier"""
     def __init__(self, args):

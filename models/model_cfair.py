@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Function
-from . import register_model
 from models.model_mlp import MLP
 
 class GradReverse(Function):
@@ -33,7 +32,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("cfair")
 class CFairNet(nn.Module):
     """Initializes CFAIR network: MLP encoder, MLP classifier, 2 MLP discriminators"""
     def __init__(self, args):

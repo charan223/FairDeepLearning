@@ -4,7 +4,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import register_model
 
 
 """Module for a single Multi Layer Perception (MLP) unit
@@ -68,7 +67,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("mlp")
 class MLPNet(nn.Module):
     def __init__(self, args):
         super(MLPNet, self).__init__()

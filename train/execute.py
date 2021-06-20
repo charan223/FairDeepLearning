@@ -14,7 +14,6 @@ from utils.options import parse_args
 from utils.log_utils import save_args
 from dataloaders.dataset_loader import Dataset
 from dataloaders.adult_loader import AdultDataset
-from models import ModelFactory, MODEL_REGISTRY
 from utils.log_utils import (
     TrainLog,
     AverageMeterSet,
@@ -187,7 +186,9 @@ def get_args(wandb):
     if not args.name:
         args.name = "%s" % ("".join(time.ctime().split()))
 
-    if "laftr" in args.arch:
+    if "ffvae" in args.arch:
+        args.model_name = args.arch
+    elif "laftr" in args.arch:
         args.model_name = "laftr"
     elif "cfair" in args.arch:
         args.model_name = "cfair"
@@ -207,7 +208,13 @@ def get_args(wandb):
     if args.data == "adult":
         args.input_dim = 112
         args.measure_sensattr = args.sensattr
-        if "laftr" in args.model_name:
+
+        if "ffvae" in args.model_name:
+            args.zdim = 60
+            args.adepth, args.edepth, args.cdepth = 1, 1, 1
+            args.awidths, args.ewidths, args.cwidths = 200, 200, 200
+            args.batch_size = 64
+        elif "laftr" in args.model_name:
             args.zdim = 8
             args.aud_steps = 1
             args.adepth, args.edepth, args.cdepth = 0, 0, 0
@@ -217,11 +224,6 @@ def get_args(wandb):
             args.zdim = 60
             args.adepth, args.edepth, args.cdepth = 1, 0, 0
             args.awidths, args.ewidths, args.cwidths = 50, 0, 0
-            args.batch_size = 64
-        elif "ffvae" in args.model_name:
-            args.zdim = 60
-            args.adepth, args.edepth, args.cdepth = 1, 1, 1
-            args.awidths, args.ewidths, args.cwidths = 200, 200, 200
             args.batch_size = 64
 
     save_args(args, os.path.join(args.output_dir, "args.json"))
@@ -292,7 +294,13 @@ def save_early_stopping_logs(
 
 
 def get_model(args):
-    model = ModelFactory.build_model(args.model_name, args).to(args.device)
+    class_names = {"cfair": "CFairNet", "conv": "ConvNet", "ffvae": "Ffvae", "laftr": "LaftrNet", "mlp": "MLPNet", "ffvae_cfair": "Ffvae_cfair", "ffvae_laftr": "Ffvae_laftr"}
+    if args.model_name == "ffvae_cfair" or args.model_name == "ffvae_laftr":
+        mod = import_module('.ablations.model_'+args.model_name, package="models")
+        model = getattr(mod, class_names[args.model_name]).build_model(args).to(args.device)
+    else:
+        mod = import_module('.model_'+args.model_name, package="models")
+        model = getattr(mod, class_names[args.model_name]).build_model(args).to(args.device)
     return model
 
 

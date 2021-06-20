@@ -4,7 +4,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import register_model
 import torch.utils.data
 from models.model_cfair import grad_reverse
 from models.model_mlp import MLP as MLP_cfair
@@ -132,7 +131,6 @@ args: ArgumentParser
 """
 
 
-@register_model("ffvae_cfair")
 class Ffvae_cfair(nn.Module):
     """Initializes FFVAE network: VAE encoder, MLP classifier, MLP discriminator"""
 
@@ -146,6 +144,7 @@ class Ffvae_cfair(nn.Module):
         self.sensattr = args.sensattr
         self.device = args.device
         self.data = args.data
+        self.adv_coeff = args.adv_coeff
 
         # VAE encoder
         if self.data == "clr-mnist":

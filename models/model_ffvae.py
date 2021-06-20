@@ -4,7 +4,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from . import register_model
 import torch.utils.data
 
 
@@ -124,7 +123,6 @@ Parameters
 args: ArgumentParser
         Contains all model and shared input arguments
 """
-@register_model("ffvae")
 class Ffvae(nn.Module):
     """Initializes FFVAE network: VAE encoder, MLP classifier, MLP discriminator"""
     def __init__(self, args):

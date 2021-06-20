@@ -8,7 +8,7 @@ from utils.log_utils import save_args, load_args
 def add_model_args(parser):
 
     add_argument(parser, '--arch', type=str,
-                 choices=['ffvae', 'conv', 'mubal', 'cfair', 'cfair-eo', 'mlp', 'laftr-dp', 'laftr-eqopp0', 'laftr-eqopp1', 'laftr-eqodd'], 
+                 choices=['ffvae', 'conv', 'cfair', 'cfair-eo', 'mlp', 'laftr-dp', 'laftr-eqopp0', 'laftr-eqopp1', 'laftr-eqodd', 'ffvae_cfair', 'ffvae_laftr'], 
                  default='ffvae'
                  )
 
