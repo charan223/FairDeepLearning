@@ -9,7 +9,7 @@ is a void of a common framework to analyze and compare their capabilities. In th
 
 A code snippet that demonstrastes how to quickly benchmark a particlar technique on our synthetic dataset:
 ```
-python train/execute.py --arch "mlp/conv/laftr-dp/laftr-eqodd/laftr-eqopp0/laftr-eqopp1/ffvae/cfair/cfair-eo" --ifwandb
+python train/execute.py --arch "mlp/conv/laftr-dp/laftr-eqodd/laftr-eqopp0/laftr-eqopp1/ffvae/cfair/cfair-eo" --ifwandb True
 ```
 
 ## What are the datasets and associated tasks?
@@ -48,33 +48,33 @@ python dataloaders/mnist_loader.py --data_dir ./data
 ```
 
 For Adult dataset:
-Upload data files from the [Adult website][adult] to ./data/ folder
+Upload data files from the [Adult website][adult] to ./data/adult folder
 
 Once downloaded you can run CI-MNIST experiments like:
 ```bash
-python scripts/coloredmnist/setting12/cfair_multiple_launcher.py
+python scripts/CIMNIST/settings12/cfair_multiple_launcher.py
 ```
 
 Once installed you can run ADULT experiments like:
 ```bash
-python scripts/adult/setting12/cfair_multiple_launcher.py
+python scripts/Adult/settings12/cfair_multiple_launcher.py
 ```
 
-As well as all the other scripts under scripts/adult or scripts/coloredmnist in order to complete the sweep of experiments that were completed for the results in the paper
+As well as all the other scripts under scripts/Adult or scripts/CIMNIST in order to complete the sweep of experiments that were completed for the results in the paper
 
 For reproducing results in Setting 1, 2 of CI-MNIST:
 ```
-Run the files in scripts/coloredmnist/setting12/ folder.
+Run the files in scripts/CIMNIST/settings12/ folder.
 ```
 
 For reproducing results in Setting 3, 4 of CI-MNIST:
 ```
-Run the files in scripts/coloredmnist/setting34/ folder. 
+Run the files in scripts/CIMNIST/settings34/ folder. 
 ```
 
 For reproducing results in Setting 1, 2 of Adult:
 ```
-Run the files in scripts/adult/setting12/ folder.
+Run the files in scripts/Adult/settings12/ folder.
 ```
 
 For reproducing ablation experiments in Tables 54 to 59 in the paper:
