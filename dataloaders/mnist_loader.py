@@ -30,6 +30,7 @@ class MNISTthin:
         egr=0.5,
         ogr=0.5,
         sensitiveattr="bck",
+        num_groups=2,
         transform_list=[],
         out_channels=3,
     ):
@@ -70,6 +71,7 @@ class MNISTthin:
         # class attributes
         self.transform = None
         self.n_classes = 2
+        self.num_groups = num_groups
         self.out_channels = out_channels
         assert sensitiveattr in ["bck", "color_gy"]
         self.sensitiveattr = sensitiveattr
@@ -87,6 +89,7 @@ class MNISTthin:
             green_yellow=green_yellow,
             egr=egr,
             ogr=ogr,
+            num_groups=num_groups
         )
         self.att = self.att[self.sensitiveattr]
         self.eo_lbl = (lbl % 2 == 0).astype(np.uint8)
@@ -103,7 +106,8 @@ class MNISTthin:
         clr_ratio=[],
         green_yellow=True,
         egr=0.5,
-        ogr=0.5
+        ogr=0.5,
+        num_groups=2
     ):
         """This module returns
         MNIST digits with
@@ -114,17 +118,19 @@ class MNISTthin:
         cat-digits ::: categorical labels
         clr_ratio[0] (clr_ratio[1]) refers to the ratio of blue in even (odd) digits
         """
-        assert bck in ["blue-red", "black"]
+        assert bck in ["blue-red", "multi-color", "black"]
 
         shffl_1st = np.arange(self.images.shape[0])
         np.random.shuffle(shffl_1st)
+
         assert self.images.shape[-1] == 3
+        dtype = np.float32
+
         if shade:
-            dtype = np.float32
             c = 1.0
         else:
             c = 255.0
-            dtype = np.float32
+
         image = (self.images * c).astype(dtype)
 
         mask = self.images[:, :, :, :].copy()
@@ -262,34 +268,158 @@ class MNISTthin:
             image[even_odd_label == 1] += np.concatenate([be, re], axis=0)
             image[even_odd_label == 0] += np.concatenate([bo, ro], axis=0)
 
-            image = image[shffl_1st]
-            mask = mask[shffl_1st]
-            label = label[shffl_1st]
+        elif bck == "multi-color":            
+            # Currently supporting 13 colors with no shade
+            # red, lime, blue, yellow, cyan, magenta, silver
+            # maroon, olive, green, purple, teal, navy    
+            rgb_colors = [(255,0,0), (0,255,0), (0,0,255), (255,255,0), (0,255,255), \
+                        (255,0,255), (192,192,192), (128,0,0), (128,128,0), (0,128,0), \
+                        (128,0,128), (0,128,128), (0,0,128)]
+            
             even_odd_label = (label % 2 == 0).astype(np.uint8)
-            np.random.shuffle(shffl_1st)
+            num_imgs_o = mask[even_odd_label == 0].shape[0]
+            num_imgs_e = mask[even_odd_label == 1].shape[0]
+            ce_ratios, co_ratios = [0] * num_groups, [0] * num_groups
+            for i in range(num_groups):
+                ce_ratios[i] = int(clr_ratio[0][i] * even_odd_label.sum())
+                co_ratios[i] = int(clr_ratio[1][i] * (mask.shape[0] - even_odd_label.sum()))
 
-            if green_yellow:
-                num_o_gt = int(num_imgs_o * ogr)
-                num_e_gt = int(num_imgs_e * egr)
-                num_e_yt = num_imgs_e - num_e_gt
-                num_o_yt = num_imgs_o - num_o_gt
-                color_gy = np.ones((image.shape[0])).astype("uint8")
+            for i in range(num_groups):
+                ce_ratio, co_ratio = ce_ratios[i], co_ratios[i]
+                ce = np.zeros((ce_ratio, 32, 32, 3), dtype=dtype)
+                co = np.zeros((co_ratio, 32, 32, 3), dtype=dtype)
 
-                count_e, count_o = 0, 0
-                for i in range(image.shape[0]):
-                    if even_odd_label[i] == 1:
-                        if count_e < num_e_gt:
-                            color_gy[i] = 0
-                            count_e += 1
-                    elif even_odd_label[i] == 0:
-                        if count_o < num_o_gt:
-                            color_gy[i] = 0
-                            count_o += 1
+                rgb_color = rgb_colors[i]
 
-                for i in range(image.shape[0]):
+                ce[:, :, :, 0] = rgb_color[0] * np.ones((ce_ratio, 32, 32, 1), dtype=dtype)
+                ce[:, :, :, 1] = rgb_color[1] * np.ones((ce_ratio, 32, 32, 1), dtype=dtype)
+                ce[:, :, :, 2] = rgb_color[2] * np.ones((ce_ratio, 32, 32, 1), dtype=dtype)
 
-                    if color_gy[i] == 0:
-                        p = 6
+                ce = c * (ce * (1 - (self.images[even_odd_label == 1] > 0.5).astype(dtype)[:ce_ratio]))
+                x = 1 - (self.images[even_odd_label == 1] <= 0.5).astype(dtype)[:ce_ratio]
+                ce = ce + (255.0 * x)
+                assert ce.shape == (ce_ratio, *image.shape[1:])
+
+
+                co[:, :, :, 0] = rgb_color[0] * np.ones((co_ratio, 32, 32, 1), dtype=dtype)
+                co[:, :, :, 1] = rgb_color[1] * np.ones((co_ratio, 32, 32, 1), dtype=dtype)
+                co[:, :, :, 2] = rgb_color[2] * np.ones((co_ratio, 32, 32, 1), dtype=dtype)
+
+                co = c * (co * (1 - (self.images[even_odd_label == 0] > 0.5).astype(dtype)[:co_ratio]))
+                x = 1 - (self.images[even_odd_label == 0] <= 0.5).astype(dtype)[:co_ratio]
+                co = co + (255.0 * x)
+                assert co.shape == (co_ratio, *image.shape[1:])
+
+                if i == 0:
+                    concat_ce = ce
+                    concat_co = co
+                else:
+                    concat_ce = np.concatenate([concat_ce, ce], axis=0)
+                    concat_co = np.concatenate([concat_co, co], axis=0)
+        
+        image[even_odd_label == 1] += concat_ce
+        image[even_odd_label == 0] += concat_co
+        image = image[shffl_1st]
+        mask = mask[shffl_1st]
+        label = label[shffl_1st]
+        even_odd_label = (label % 2 == 0).astype(np.uint8)
+        np.random.shuffle(shffl_1st)
+
+        if green_yellow:
+                if not isinstance(ogr, list):
+                    num_o_gt = int(num_imgs_o * ogr)
+                    num_e_gt = int(num_imgs_e * egr)
+                    num_e_yt = num_imgs_e - num_e_gt
+                    num_o_yt = num_imgs_o - num_o_gt
+                    color_gy = np.ones((image.shape[0])).astype("uint8")
+
+                    count_e, count_o = 0, 0
+                    for i in range(image.shape[0]):
+                        if even_odd_label[i] == 1:
+                            if count_e < num_e_gt:
+                                color_gy[i] = 0
+                                count_e += 1
+                        elif even_odd_label[i] == 0:
+                            if count_o < num_o_gt:
+                                color_gy[i] = 0
+                                count_o += 1
+
+                    for i in range(image.shape[0]):
+
+                        if color_gy[i] == 0:
+                            p = 6
+                            for k in range(4):
+                                for m in range(4):
+                                    (
+                                        image[i][k, p + m, 0],
+                                        image[i][k, p + m, 1],
+                                        image[i][k, p + m, 2],
+                                    ) = (255.0 / 2, 255.0 / 2, 255.0 / 2)
+                        elif color_gy[i] == 1:
+                            p = 22
+                            for k in range(4):
+                                for m in range(4):
+                                    (
+                                        image[i][k, p + m, 0],
+                                        image[i][k, p + m, 1],
+                                        image[i][k, p + m, 2],
+                                    ) = (255.0 / 2, 255.0 / 2, 255.0 / 2)
+                
+                # multiple positions of the box
+                else:
+                    num_group_even_arr, num_group_odd_arr = [0] * num_groups, [0] * num_groups
+                    for i in range(num_groups):
+                        num_group_even_arr[i] = int(num_imgs_e * egr[i])
+                        num_group_odd_arr[i] = int(num_imgs_o * ogr[i])
+                    
+                    if num_imgs_e > sum(num_group_even_arr):
+                        diff = num_imgs_e - sum(num_group_even_arr)
+                        k = 0
+                        while diff > 0:
+                            num_group_even_arr[k] += 1
+                            k = (k+1)%10
+                            diff -= 1
+
+                    if num_imgs_o > sum(num_group_odd_arr):
+                        diff = num_imgs_o - sum(num_group_odd_arr)
+                        k = 0
+                        while diff > 0:
+                            num_group_odd_arr[k] += 1
+                            k = (k+1)%10
+                            diff -= 1
+
+                    color_gy = np.ones((image.shape[0])).astype("uint8")
+                    count_e, count_o = [0]*num_groups, [0]*num_groups
+
+                    for i in range(image.shape[0]):
+                        if even_odd_label[i] == 1:
+                            for k in range(len(num_groups)):
+                                if count_e[k] < num_group_even_arr[k]:
+                                    color_gy[i] = k
+                                    count_e[k] += 1
+                                
+                        elif even_odd_label[i] == 0:
+                            for k in range(len(num_groups)):
+                                if count_o[k] < num_group_odd_arr[k]:
+                                    color_gy[i] = k
+                                    count_o[k] += 1
+
+                    for i in range(image.shape[0]):
+                        assert num_groups <= 13
+                        
+                        curr_grp = color_gy[i]
+
+                        # width of image = 32
+                        n_c = 32 / num_groups
+                        
+                        # if num_groups = 2, for first box, (l=0, r=15), 
+                        # for second (l=16, r=31)
+                        l = curr_grp * n_c
+                        r = (curr_grp+1) * n_c - 1
+
+                        # box's first column is p
+                        p = (l + r)/2 - 1
+
                         for k in range(4):
                             for m in range(4):
                                 (
@@ -297,24 +427,15 @@ class MNISTthin:
                                     image[i][k, p + m, 1],
                                     image[i][k, p + m, 2],
                                 ) = (255.0 / 2, 255.0 / 2, 255.0 / 2)
-                    elif color_gy[i] == 1:
-                        p = 22
-                        for k in range(4):
-                            for m in range(4):
-                                (
-                                    image[i][k, p + m, 0],
-                                    image[i][k, p + m, 1],
-                                    image[i][k, p + m, 2],
-                                ) = (255.0 / 2, 255.0 / 2, 255.0 / 2)
-
-            image = image[shffl_1st]
-            mask = mask[shffl_1st]
-            label = label[shffl_1st]
-            even_odd_label = (label % 2 == 0).astype(np.uint8)
-            if green_yellow:
-                color_gy = color_gy[shffl_1st].astype(np.uint8)
-                all_att["color_gy"] = color_gy
-            np.random.shuffle(shffl_1st)
+                  
+                image = image[shffl_1st]
+                mask = mask[shffl_1st]
+                label = label[shffl_1st]
+                even_odd_label = (label % 2 == 0).astype(np.uint8)
+                if green_yellow:
+                    color_gy = color_gy[shffl_1st].astype(np.uint8)
+                    all_att["color_gy"] = color_gy
+                np.random.shuffle(shffl_1st)
 
         attribute = image[:, 3, 0, :].copy().argmax(axis=1)
         attribute[attribute == 2] = 1
