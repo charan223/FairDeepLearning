@@ -106,6 +106,9 @@ To generate tables in the paper, run
 python plots_tables/tables/get_tables.py
 ```
 
+### Multiple protected groups - CI-MNIST
+CI_MNIST can now be used with multiple protected groups (multiple backround colors and multiple box positions), check arguments in ```options.py``` file for how to use this feature.
+
 ## Giving Credit
 
 ### Dataset Credits
