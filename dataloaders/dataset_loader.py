@@ -165,6 +165,7 @@ def clr_mnist(args, device):
         egr=args.egr,
         ogr=args.ogr,
         sensitiveattr=args.sensattr,
+        num_groups=args.num_groups,
         transform_list=[],
         out_channels=3,
     )
@@ -179,6 +180,7 @@ def clr_mnist(args, device):
         egr=args.egr,
         ogr=args.ogr,
         sensitiveattr=args.sensattr,
+        num_groups=args.num_groups,
         transform_list=[],
         out_channels=3,
     )
@@ -193,6 +195,7 @@ def clr_mnist(args, device):
         egr=0.5,
         ogr=0.5,
         sensitiveattr=args.sensattr,
+        num_groups=args.num_groups,
         transform_list=[],
         out_channels=3,
     )

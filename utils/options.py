@@ -8,7 +8,8 @@ from utils.log_utils import save_args, load_args
 def add_model_args(parser):
 
     add_argument(parser, '--arch', type=str,
-                 choices=['ffvae', 'conv', 'cfair', 'cfair-eo', 'mlp', 'laftr-dp', 'laftr-eqopp0', 'laftr-eqopp1', 'laftr-eqodd', 'ffvae_cfair', 'ffvae_laftr'], 
+                 choices=['ffvae', 'conv', 'cfair', 'cfair-eo', 'mlp', 'laftr-dp',
+                          'laftr-eqopp0', 'laftr-eqopp1', 'laftr-eqodd', 'ffvae_cfair', 'ffvae_laftr'],
                  default='ffvae'
                  )
 
@@ -19,7 +20,6 @@ def add_model_args(parser):
 
     add_argument(parser, '--adv-coeff', type=float, default=10.,
                  help='(default: 10.)')
-
 
     add_argument(parser, '--gamma', type=float, default=0.5,
                  help='gamma in paper (default: 10.)')
@@ -35,19 +35,21 @@ def add_shared_args(parser):
     add_argument(parser, '--sensattr', default='bck', type=str,
                  help='sensitive attribute')
 
-    add_argument(parser, '--beta_1', default=0.5, type=float,
-                 help='background blue ratio for evens in training phase (default:0.5)')
-    add_argument(parser, '--beta_2', default=0.5, type=float,
-                 help='background blue ratio for odds n training phase (default:0.5)')
+    add_argument(parser, '--beta_1',
+                 help='background blue ratio for evens in training phase, \
+                 for multiple colors input a list [0.5, 0.4, 0.1], indicating 0.5 of even are first color, 0.4 of even are second, so on')
+    add_argument(parser, '--beta_2',
+                 help='background blue ratio for odds in training phase, \
+                 for multiple colors input a list [0.5, 0.4, 0.1], indicating 0.5 of even are first color, 0.4 of even are second, so on')
     add_argument(parser, '--useshade', action='store_false', default=True,
                  help='use shade bool val')
 
     add_argument(parser, '--green_yellow', action='store_false', default=True,
                  help='green_yellow bool val')
-    add_argument(parser, '--egr', default=0.5, type=float,
-                 help='egr')
-    add_argument(parser, '--ogr', default=0.5, type=float,
-                 help='ogr')
+    add_argument(parser, '--egr', help='position ratio for even, \
+                 for multiple positions input a list [0.5, 0.4, 0.1], indicating 0.5 of even have box in first position, 0.4 of even have it in second, so on')
+    add_argument(parser, '--ogr', help='position ratio for odd, \
+                 for multiple positions input a list [0.5, 0.4, 0.1], indicating 0.5 of even have box in first position, 0.4 of even have it in second, so on')
     add_argument(parser, '--adult_threshold', type=int,
                  help='threshold of sensitive attribute')
 
@@ -59,24 +61,25 @@ def add_shared_args(parser):
     add_argument(parser, '--num-classes', type=int, default=2,
                  help='number of classes fixed 2')
     add_argument(parser, '--num-groups', type=int, default=2,
-                 help='number of groups')
+                 help='number of groups, should be less <= 13 as the 4x4 box doesnt have anymore positions in the image,\
+                      to support more groups use smaller square boxes')
     add_argument(parser, '--input-dim', type=int, default=3072,
                  help='number of inputs 3 * 32 * 32')
-    add_argument(parser, '--edepth', type=check_positive, default = 2,
+    add_argument(parser, '--edepth', type=check_positive, default=2,
                  help='Encoder MLP depth as in depth*[width]')
-    add_argument(parser, '--ewidths', type=check_positive, default = 32,
+    add_argument(parser, '--ewidths', type=check_positive, default=32,
                  help='Encoder MLP width')
-    add_argument(parser, '--cdepth', type=int, default = 2,
+    add_argument(parser, '--cdepth', type=int, default=2,
                  help='Classifier MLP depth as in depth*[width]')
-    add_argument(parser, '--cwidths', type=check_positive, default = 32,
+    add_argument(parser, '--cwidths', type=check_positive, default=32,
                  help='Classifier MLP width')
-    add_argument(parser, '--adepth', type=check_positive, default = 2,
+    add_argument(parser, '--adepth', type=check_positive, default=2,
                  help='Auditor MLP depth as in depth*[width]')
-    add_argument(parser, '--awidths', type=check_positive, default = 32,
+    add_argument(parser, '--awidths', type=check_positive, default=32,
                  help='Auditor MLP width')
     add_argument(parser, '--zdim', type=check_positive, default=16,
                  help='All MLPs has this as input or output (default: 16)')
-    add_argument(parser, '--bck', default='blue-red', type=str,
+    add_argument(parser, '--bck', default='blue-red', type=str, choices=['blue-red', 'multi-color', 'black'],
                  help='bck value')
 
     add_argument(parser, '--replicate', type=int, default=1,
@@ -121,7 +124,6 @@ def add_shared_args(parser):
     add_argument(parser, '--ifwandb', dest='ifwandb',
                  type=lambda x: bool(distutils.util.strtobool(x)),
                  help='Flag to activate/deactivate wandb logging')
-
 
 
 def parse_args(input_args=None, parse_known=False):
